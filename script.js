@@ -923,12 +923,100 @@ function initLoginPage() {
     saveData();
     window.location.href = "admin.html";
   });
+}
 
-  document.getElementById("forgotPasswordLink").addEventListener("click", (e) => {
+function initForgotPasswordPage() {
+  if (state.session) {
+    window.location.href = state.session.role === "admin" ? "admin.html" : "household.html";
+    return;
+  }
+
+  const roleSelect = document.getElementById("resetRole");
+  const identifier = document.getElementById("resetIdentifier");
+  const verifier = document.getElementById("resetVerifier");
+  const verifierHint = document.getElementById("resetVerifierHint");
+  const form = document.getElementById("forgotPasswordForm");
+  const msg = document.getElementById("forgotMessage");
+
+  const syncFields = () => {
+    if (roleSelect.value === "admin") {
+      identifier.placeholder = "admin";
+      verifier.placeholder = "COM-SERVE-ADMIN";
+      verifierHint.textContent = "Admin reset key required for confirmation.";
+    } else {
+      identifier.placeholder = "HH001";
+      verifier.placeholder = "Section A";
+      verifierHint.textContent = "Enter your registered area (for example: Section A).";
+    }
+  };
+
+  roleSelect.onchange = syncFields;
+  syncFields();
+
+  form.onsubmit = (e) => {
     e.preventDefault();
-    message.textContent = "Password reset link sent (simulation). Contact admin for immediate help.";
-    message.classList.add("ok");
-  });
+    const role = roleSelect.value;
+    const id = identifier.value.trim();
+    const verify = verifier.value.trim();
+    const next = document.getElementById("resetNewPassword").value;
+    const confirm = document.getElementById("resetConfirmPassword").value;
+
+    if (!next || next.length < 4) {
+      msg.textContent = "New password must be at least 4 characters.";
+      msg.className = "message";
+      return;
+    }
+
+    if (next !== confirm) {
+      msg.textContent = "Passwords do not match.";
+      msg.className = "message";
+      return;
+    }
+
+    if (role === "household") {
+      const householdId = id.toUpperCase();
+      const h = getHouseholdById(householdId);
+      if (!h) {
+        msg.textContent = "Household not found.";
+        msg.className = "message";
+        return;
+      }
+
+      if (h.area.toLowerCase() !== verify.toLowerCase()) {
+        msg.textContent = "Verification failed. Check your area and try again.";
+        msg.className = "message";
+        return;
+      }
+
+      h.password = next;
+      addAudit("password_reset", `household:${householdId}`);
+      saveData();
+      msg.textContent = "Password reset successful. Redirecting to login...";
+      msg.className = "message ok";
+      showToast("Password reset successful.");
+      setTimeout(() => {
+        window.location.href = "index.html";
+      }, 1200);
+      return;
+    }
+
+    const adminKey = "COM-SERVE-ADMIN";
+    if (id !== state.data.admin.username || verify !== adminKey) {
+      msg.textContent = "Admin verification failed.";
+      msg.className = "message";
+      return;
+    }
+
+    state.data.admin.password = next;
+    addAudit("password_reset", "admin");
+    saveData();
+    msg.textContent = "Admin password reset successful. Redirecting to login...";
+    msg.className = "message ok";
+    showToast("Admin password reset successful.");
+    setTimeout(() => {
+      window.location.href = "index.html";
+    }, 1200);
+  };
 }
 
 function renderHouseholdDashboard() {
@@ -1472,6 +1560,11 @@ function initPage() {
 
   if (page === "login") {
     initLoginPage();
+    return;
+  }
+
+  if (page === "forgot-password") {
+    initForgotPasswordPage();
     return;
   }
 
