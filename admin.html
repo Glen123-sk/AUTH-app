@@ -56,6 +56,14 @@
         <h3>Total Fines</h3>
         <p id="adminMetricFines" class="value">R0.00</p>
       </article>
+      <article class="card">
+        <h3>Runtime Alerts</h3>
+        <p id="adminMetricRuntime" class="value">0</p>
+      </article>
+      <article class="card">
+        <h3>Audit Entries</h3>
+        <p id="adminMetricAudit" class="value">0</p>
+      </article>
         </section>
 
         <section class="grid grid-2">
@@ -89,8 +97,14 @@
           <article class="card">
             <h3>Reports</h3>
             <button id="adminExportCsv" class="btn btn-ghost" type="button">Export Payment Report (CSV)</button>
+            <button id="adminExportBackup" class="btn btn-ghost" type="button">Export Full Backup (JSON)</button>
+            <button id="adminVerifyAudit" class="btn btn-ghost" type="button">Verify Audit Chain</button>
+            <input id="adminRestoreBackupFile" type="file" accept="application/json" />
+            <button id="adminRestoreBackup" class="btn btn-danger" type="button">Restore Backup</button>
             <h4>Recent Activity</h4>
             <div id="adminActivity" class="list"></div>
+            <h4>Runtime Monitor</h4>
+            <div id="adminRuntime" class="list"></div>
           </article>
         </section>
 
