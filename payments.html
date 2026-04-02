@@ -70,6 +70,18 @@
         <button id="payCardBtn" class="btn btn-ghost" type="button">Simulate Card Payment</button>
       </div>
 
+      <details class="payment-methods">
+        <summary class="btn btn-ghost payment-methods-summary">Payment Methods</summary>
+        <div class="payment-methods-panel">
+          <p class="muted">Choose how you want to settle the selected due:</p>
+          <div class="inline-row wrap">
+            <button id="payWalletBtnAlt" class="btn btn-primary" type="button">Wallet</button>
+            <button id="payQrBtnAlt" class="btn btn-ghost" type="button">QR</button>
+            <button id="payCardBtnAlt" class="btn btn-ghost" type="button">Card</button>
+          </div>
+        </div>
+      </details>
+
       <div id="paymentResult" class="message ok"></div>
         </section>
 

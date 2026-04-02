@@ -32,12 +32,23 @@ function initSecurityStructures() {
   state.data.auditTrail = state.data.auditTrail || [];
   state.data.runtimeErrors = state.data.runtimeErrors || [];
   state.data.emailLog = state.data.emailLog || [];
+  state.data.inboxMessages = state.data.inboxMessages || [];
   state.data.emailConfig = state.data.emailConfig || {
-    serviceId: "",
-    templateId: "",
-    publicKey: "",
+    serviceId: "service_726t11d",
+    templateId: "template_a4h2kka",
+    publicKey: "eHOVr8MN2-lJzoKv",
     senderName: "COM-SERVE",
-    replyTo: "",
+    replyTo: "com205260@gmail.com",
+  };
+  state.data.emailConfig.serviceId = state.data.emailConfig.serviceId || "service_726t11d";
+  state.data.emailConfig.templateId = state.data.emailConfig.templateId || "template_a4h2kka";
+  state.data.emailConfig.publicKey = state.data.emailConfig.publicKey || "eHOVr8MN2-lJzoKv";
+  state.data.emailConfig.senderName = state.data.emailConfig.senderName || "COM-SERVE";
+  state.data.emailConfig.replyTo = state.data.emailConfig.replyTo || "com205260@gmail.com";
+
+  state.data.inboxConfig = state.data.inboxConfig || {
+    email: "com205260@gmail.com",
+    name: "COM-SERVE",
   };
 }
 
@@ -72,6 +83,46 @@ function updateEmailConfig(nextConfig) {
     ...nextConfig,
   };
   saveData();
+}
+
+
+
+function inboxConfig() {
+  initSecurityStructures();
+  return state.data.inboxConfig;
+}
+
+function updateInboxConfig(nextConfig) {
+  initSecurityStructures();
+  state.data.inboxConfig = {
+    ...inboxConfig(),
+    ...nextConfig,
+  };
+  saveData();
+}
+
+function receiveInboxMessage({ fromName, fromEmail, subject, message }) {
+  if (!fromEmail || !subject || !message) {
+    return { ok: false, reason: "Missing required fields." };
+  }
+
+  initSecurityStructures();
+  const msg = {
+    id: uid(),
+    date: new Date().toISOString(),
+    fromName: String(fromName || "").trim() || "Anonymous",
+    fromEmail: String(fromEmail || "").trim().toLowerCase(),
+    subject: String(subject || "").trim(),
+    message: String(message || "").trim(),
+    read: false,
+  };
+
+  state.data.inboxMessages.unshift(msg);
+  state.data.inboxMessages = state.data.inboxMessages.slice(0, 1000);
+  addAudit("inbox_message", `from:${msg.fromEmail} subject:${msg.subject}`);
+  saveData();
+
+  return { ok: true, id: msg.id };
 }
 
 function logEmailEvent(status, details) {
@@ -191,6 +242,58 @@ function sendBroadcastEmailToHouseholds({ subject, message, meta = {} }) {
       meta: { householdId: household.id, ...meta },
     });
   });
+}
+
+function householdsEligibleForMassEmail(group) {
+  return state.data.households.filter((household) => {
+    if (!emailTargetOf(household)) {
+      return false;
+    }
+
+    if (group === "outstanding") {
+      const t = totals(household);
+      return Number(t.total || 0) > 0;
+    }
+
+    return true;
+  });
+}
+
+async function sendMassEmailToGroup({ group, subject, message }) {
+  const recipients = householdsEligibleForMassEmail(group);
+  const results = { total: recipients.length, sent: 0, failed: 0, skipped: 0 };
+
+  for (const household of recipients) {
+    const recipientEmail = emailTargetOf(household);
+    const outstanding = totals(household);
+    const bodyPrefix = group === "outstanding"
+      ? `${recipientEmail}\n\nHello ${displayNameOf(household)},\n\nYour current outstanding amount is ${money(outstanding.total)}.\n\n`
+      : `${recipientEmail}\n\nHello ${displayNameOf(household)},\n\n`;
+
+    const response = await sendEmailMessage({
+      toEmail: recipientEmail,
+      toName: displayNameOf(household),
+      subject,
+      message: `${bodyPrefix}${message}`,
+      meta: {
+        householdId: household.id,
+        displayName: displayNameOf(household),
+        outstandingAmount: money(outstanding.total),
+        emailGroup: group,
+      },
+    });
+
+    if (response.ok) {
+      results.sent += 1;
+    } else if (response.skipped) {
+      results.skipped += 1;
+    } else {
+      results.failed += 1;
+    }
+  }
+
+  addAudit("mass_email", `${group}:${results.sent}/${results.total}`);
+  return results;
 }
 
 function addAudit(action, details = "") {
@@ -1532,6 +1635,12 @@ function renderPaymentsPage() {
   document.getElementById("payWalletBtn").onclick = () => handlePay("Wallet");
   document.getElementById("payQrBtn").onclick = () => handlePay("QR");
   document.getElementById("payCardBtn").onclick = () => handlePay("Card");
+  const payWalletBtnAlt = document.getElementById("payWalletBtnAlt");
+  const payQrBtnAlt = document.getElementById("payQrBtnAlt");
+  const payCardBtnAlt = document.getElementById("payCardBtnAlt");
+  if (payWalletBtnAlt) payWalletBtnAlt.onclick = () => handlePay("Wallet");
+  if (payQrBtnAlt) payQrBtnAlt.onclick = () => handlePay("QR");
+  if (payCardBtnAlt) payCardBtnAlt.onclick = () => handlePay("Card");
 
   const recentBody = document.getElementById("recentPaymentBody");
   const recent = [...(h.paymentHistory || [])].sort((a, b) => new Date(b.date) - new Date(a.date)).slice(0, 15);
@@ -1639,6 +1748,7 @@ function initSettingsPage() {
   };
 
   const emailMsg = document.getElementById("emailSettingsMessage");
+
   const emailForm = document.getElementById("emailSettingsForm");
   if (emailForm) {
     emailForm.onsubmit = (e) => {
@@ -1810,7 +1920,26 @@ function initAdminPage() {
   document.getElementById("emailTemplateId").value = cfg.templateId || "";
   document.getElementById("emailPublicKey").value = cfg.publicKey || "";
   document.getElementById("emailSenderName").value = cfg.senderName || "COM-SERVE";
-  document.getElementById("emailReplyTo").value = cfg.replyTo || "";
+  document.getElementById("emailReplyTo").value = cfg.replyTo || "com205260@gmail.com";
+  document.getElementById("emailTestRecipient").value = "com205260@gmail.com";
+
+  const gmailDefaultsBtn = document.getElementById("gmailDefaultsBtn");
+  if (gmailDefaultsBtn) {
+    gmailDefaultsBtn.onclick = () => {
+      document.getElementById("emailSenderName").value = "COM-SERVE";
+      document.getElementById("emailReplyTo").value = "com205260@gmail.com";
+      document.getElementById("emailTestRecipient").value = "com205260@gmail.com";
+      if (!document.getElementById("emailTestSubject").value.trim()) {
+        document.getElementById("emailTestSubject").value = "COM-SERVE Gmail test";
+      }
+      if (!document.getElementById("emailTestMessage").value.trim()) {
+        document.getElementById("emailTestMessage").value = "This is a Gmail test message from COM-SERVE.";
+      }
+      emailConfigMsg.textContent = "Gmail defaults loaded. Add Service ID, Template ID, and Public Key, then save.";
+      emailConfigMsg.className = "message";
+      showToast("Gmail defaults loaded.");
+    };
+  }
 
   document.getElementById("saveEmailConfigBtn").onclick = () => {
     updateEmailConfig({
@@ -1934,6 +2063,254 @@ function initAdminPage() {
   renderAdminPage();
 }
 
+
+function initMassEmailPage() {
+  if (!requireAuth("admin")) {
+    return;
+  }
+
+  const groupSelect = document.getElementById("massEmailGroup");
+  const subjectInput = document.getElementById("massEmailSubject");
+  const messageInput = document.getElementById("massEmailMessage");
+  const statusMessage = document.getElementById("massEmailStatus");
+  const sendButton = document.getElementById("sendMassEmailBtn");
+
+  if (!subjectInput.value) {
+    subjectInput.value = "COM-SERVE community update";
+  }
+
+  const updatePreview = () => {
+    const recipients = householdsEligibleForMassEmail(groupSelect.value);
+    statusMessage.textContent = `${recipients.length} household(s) are eligible for this message.`;
+    statusMessage.className = "message";
+  };
+
+  groupSelect.onchange = updatePreview;
+  updatePreview();
+
+  sendButton.onclick = async () => {
+    const group = groupSelect.value;
+    const subject = subjectInput.value.trim();
+    const message = messageInput.value.trim();
+
+    if (!subject || !message) {
+      statusMessage.textContent = "Enter both a subject and a message.";
+      statusMessage.className = "message";
+      return;
+    }
+
+    const recipients = householdsEligibleForMassEmail(group);
+    if (!recipients.length) {
+      statusMessage.textContent = "No households with saved email addresses match this group.";
+      statusMessage.className = "message";
+      return;
+    }
+
+    sendButton.disabled = true;
+    statusMessage.textContent = `Sending to ${recipients.length} household(s)...`;
+    statusMessage.className = "message";
+
+    const results = await sendMassEmailToGroup({ group, subject, message });
+    if (results.sent > 0) {
+      statusMessage.textContent = `Mass email complete: ${results.sent} sent, ${results.failed} failed, ${results.skipped} skipped.`;
+      statusMessage.className = "message ok";
+      showToast(`Mass email sent to ${results.sent} recipient(s).`);
+    } else {
+      statusMessage.textContent = `Mass email did not send. ${results.failed} failed, ${results.skipped} skipped.`;
+      statusMessage.className = "message";
+      showToast("Mass email not sent.", "error");
+    }
+
+    sendButton.disabled = false;
+  };
+}
+
+function initEmailInboxPage() {
+  if (!requireAuth("admin")) {
+    return;
+  }
+
+  const cfg = inboxConfig();
+  const inboxEmailInput = document.getElementById("inboxEmail");
+  const inboxEmailNameInput = document.getElementById("inboxEmailName");
+  const saveConfigBtn = document.getElementById("saveInboxConfigBtn");
+  const inboxConfigMessage = document.getElementById("inboxConfigMessage");
+  const inboxList = document.getElementById("inboxList");
+  const inboxSearch = document.getElementById("inboxSearch");
+  const clearInboxBtn = document.getElementById("clearInboxBtn");
+  const messageDetailSection = document.getElementById("messageDetailSection");
+  const messageDetail = document.getElementById("messageDetail");
+  const closeDetailBtn = document.getElementById("closeDetailBtn");
+
+  inboxEmailInput.value = cfg.email || "";
+  inboxEmailNameInput.value = cfg.name || "COM-SERVE";
+
+  const renderInboxList = (filter = "") => {
+    const messages = state.data.inboxMessages || [];
+    const lowerFilter = filter.toLowerCase();
+    const filtered = messages.filter((msg) =>
+      msg.fromName.toLowerCase().includes(lowerFilter) ||
+      msg.fromEmail.toLowerCase().includes(lowerFilter) ||
+      msg.subject.toLowerCase().includes(lowerFilter)
+    );
+
+    if (!filtered.length) {
+      inboxList.innerHTML = '<div class="list-item">No messages found.</div>';
+      return;
+    }
+
+    inboxList.innerHTML = filtered
+      .map((msg) => {
+        const timestamp = new Date(msg.date).toLocaleString();
+        const previewText = msg.message.substring(0, 60) + (msg.message.length > 60 ? "..." : "");
+        const readClass = msg.read ? "" : " warn";
+        return `<div class="list-item${readClass}" style="cursor: pointer;" onclick="viewInboxMessage('${msg.id}')">
+          <strong>${msg.fromName} (${msg.fromEmail})</strong><br>
+          ${msg.subject}<br>
+          <small>${previewText}</small><br>
+          <small>${timestamp}</small>
+        </div>`;
+      })
+      .join("");
+  };
+
+  saveConfigBtn.onclick = () => {
+    updateInboxConfig({
+      email: inboxEmailInput.value.trim(),
+      name: inboxEmailNameInput.value.trim() || "COM-SERVE",
+    });
+    inboxConfigMessage.textContent = "Email configuration saved.";
+    inboxConfigMessage.className = "message ok";
+    showToast("Email configuration saved.");
+  };
+
+  inboxSearch.oninput = () => renderInboxList(inboxSearch.value);
+
+  clearInboxBtn.onclick = () => {
+    confirmModal({
+      title: "Clear All Messages",
+      body: "This will delete all received messages. Continue?",
+      confirmText: "Clear",
+      onConfirm: () => {
+        state.data.inboxMessages = [];
+        saveData();
+        renderInboxList();
+        showToast("All messages cleared.");
+      },
+    });
+  };
+
+  closeDetailBtn.onclick = () => {
+    messageDetailSection.style.display = "none";
+    renderInboxList();
+  };
+
+  window.viewInboxMessage = (msgId) => {
+    const msg = (state.data.inboxMessages || []).find((m) => m.id === msgId);
+    if (!msg) return;
+
+    msg.read = true;
+    saveData();
+
+    messageDetail.innerHTML = `
+      <p><strong>From:</strong> ${msg.fromName} &lt;${msg.fromEmail}&gt;</p>
+      <p><strong>Subject:</strong> ${msg.subject}</p>
+      <p><strong>Date:</strong> ${new Date(msg.date).toLocaleString()}</p>
+      <hr style="border: 1px solid var(--line); margin: 1rem 0;">
+      <p>${msg.message.replace(/\n/g, "<br>")}</p>
+      <div style="margin-top: 1rem; display: flex; gap: 0.5rem;">
+        <button class="btn btn-primary" onclick="replyToInboxMessage('${msgId}')">Reply</button>
+        <button class="btn btn-danger" onclick="deleteInboxMessage('${msgId}')">Delete</button>
+      </div>
+    `;
+    messageDetailSection.style.display = "block";
+  };
+
+  window.deleteInboxMessage = (msgId) => {
+    confirmModal({
+      title: "Delete Message",
+      body: "Delete this message?",
+      confirmText: "Delete",
+      onConfirm: () => {
+        state.data.inboxMessages = (state.data.inboxMessages || []).filter((m) => m.id !== msgId);
+        saveData();
+        messageDetailSection.style.display = "none";
+        renderInboxList();
+        showToast("Message deleted.");
+      },
+    });
+  };
+
+  window.replyToInboxMessage = (msgId) => {
+    const msg = (state.data.inboxMessages || []).find((m) => m.id === msgId);
+    if (!msg) return;
+    showToast("Reply functionality coming soon.", "info");
+  };
+
+  renderInboxList();
+}
+
+function initContactPage() {
+  const contactForm = document.getElementById("contactForm");
+  const contactResponse = document.getElementById("contactResponse");
+
+  if (!contactForm) return;
+
+  contactForm.onsubmit = async (e) => {
+    e.preventDefault();
+
+    const fromName = document.getElementById("contactName").value.trim();
+    const fromEmail = document.getElementById("contactEmail").value.trim();
+    const subject = document.getElementById("contactSubject").value.trim();
+    const message = document.getElementById("contactMessage").value.trim();
+
+    if (!fromName || !fromEmail || !subject || !message) {
+      contactResponse.textContent = "All fields are required.";
+      contactResponse.className = "message";
+      return;
+    }
+
+    // Save message locally
+    const localResult = receiveInboxMessage({ fromName, fromEmail, subject, message });
+    if (!localResult.ok) {
+      contactResponse.textContent = `Error: ${localResult.reason}`;
+      contactResponse.className = "message";
+      showToast("Failed to send message.", "error");
+      return;
+    }
+
+    // Send email to inbox
+    const cfg = inboxConfig();
+    const inboxEmail = cfg.email || "com205260@gmail.com";
+
+    const emailResult = await sendEmailMessage({
+      toEmail: inboxEmail,
+      toName: cfg.name || "COM-SERVE",
+      subject: `Contact Form: ${subject}`,
+      message: `From: ${fromName} (${fromEmail})\n\n${message}`,
+      meta: { type: "contact_form", fromEmail, fromName },
+    });
+
+    if (emailResult.ok) {
+      contactResponse.textContent = "Thank you! Your message has been sent to com205260@gmail.com. We'll get back to you soon.";
+      contactResponse.className = "message ok";
+      showToast("Message sent successfully!");
+      contactForm.reset();
+    } else if (emailResult.skipped) {
+      // EmailJS not configured, but message is saved locally
+      contactResponse.textContent = "Message saved locally (email not configured). We'll review it soon.";
+      contactResponse.className = "message";
+      showToast("Message saved to inbox.");
+      contactForm.reset();
+    } else {
+      contactResponse.textContent = `Error sending email: ${emailResult.reason}`;
+      contactResponse.className = "message";
+      showToast("Message saved, but email send failed.", "error");
+      contactForm.reset();
+    }
+  };
+}
+
 function initPage() {
   loadData();
   loadLoginGuard();
@@ -1985,6 +2362,21 @@ function initPage() {
 
   if (page === "admin-dashboard") {
     initAdminPage();
+    return;
+  }
+
+  if (page === "mass-email") {
+    initMassEmailPage();
+    return;
+  }
+
+  if (page === "email-inbox") {
+    initEmailInboxPage();
+    return;
+  }
+
+  if (page === "contact") {
+    initContactPage();
   }
 }
 

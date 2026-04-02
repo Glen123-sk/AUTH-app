@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>COM-SERVE Testmail Inbox</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:FILL@1" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body data-page="testmail">
+  <div id="toastContainer" class="toast-container"></div>
+  <div id="modalRoot"></div>
+
+  <div class="app-shell admin-shell">
+    <aside class="app-sidebar">
+      <div class="sidebar-head">
+        <div class="logo">COM-SERVE</div>
+        <button class="btn btn-ghost nav-toggle" type="button" aria-label="Toggle menu" data-nav-target="adminNav">Menu</button>
+      </div>
+      <p class="muted">Admin Control Center</p>
+      <nav class="nav nav-stack" id="adminNav">
+        <a href="admin.html">Admin Dashboard</a>
+        <a href="email-inbox.html">Email Inbox</a>
+        <a href="mass-email.html">Mass Email</a>
+        <a href="testmail.html">Testmail Inbox</a>
+      </nav>
+    </aside>
+
+    <div class="app-main">
+      <header class="site-header">
+        <div>
+          <h1 class="page-title">Testmail Inbox</h1>
+          <p class="muted">Use Testmail.app to capture and inspect the messages sent by COM-SERVE.</p>
+        </div>
+        <div class="top-actions">
+          <button id="themeToggle" class="btn btn-ghost" type="button">Theme</button>
+          <button id="logoutBtn" class="btn btn-danger" type="button">Logout</button>
+        </div>
+      </header>
+
+      <main class="page-wrap">
+        <section class="grid grid-2">
+          <article class="card">
+            <h2><span class="material-symbols-rounded icon">vpn_key</span>Testmail Setup</h2>
+            <p class="muted">Add your Testmail namespace and API key once, then COM-SERVE can build disposable inbox addresses and query them later.</p>
+            <div class="inline-col">
+              <input id="testmailNamespace" type="text" placeholder="Testmail namespace" />
+              <input id="testmailApiKey" type="password" placeholder="Testmail API key" />
+              <button id="saveTestmailConfigBtn" class="btn btn-primary" type="button">Save Testmail Setup</button>
+            </div>
+            <p class="message" id="testmailStatus"></p>
+          </article>
+
+          <article class="card">
+            <h2><span class="material-symbols-rounded icon">mail</span>Inbox Address</h2>
+            <p class="muted">Use the format <strong>namespace.tag@inbox.testmail.app</strong>. COM-SERVE defaults to household IDs like <strong>HH001</strong>.</p>
+            <div class="inline-col">
+              <input id="testmailTag" type="text" value="HH001" placeholder="Tag or household ID" />
+              <input id="testmailLimit" type="number" min="1" max="100" value="10" />
+              <button id="queryTestmailBtn" class="btn btn-primary" type="button">Load Inbox</button>
+            </div>
+            <p class="muted">Preview: <span id="testmailAddressPreview">Set a namespace to preview an inbox address.</span></p>
+          </article>
+        </section>
+
+        <section class="card">
+          <h2><span class="material-symbols-rounded icon">dns</span>Latest Messages</h2>
+          <div id="testmailResults" class="list">
+            <div class="list-item">No inbox queried yet.</div>
+          </div>
+        </section>
+      </main>
+
+      <footer class="page-footer">COM-SERVE Testmail Center</footer>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
