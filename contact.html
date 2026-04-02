@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Contact COM-SERVE</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:FILL@1" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body data-page="contact">
+  <div class="bg-layer">
+    <div class="orb orb-a"></div>
+    <div class="orb orb-b"></div>
+    <div class="orb orb-c"></div>
+  </div>
+
+  <div id="toastContainer" class="toast-container"></div>
+  <div id="modalRoot"></div>
+
+  <main class="landing-shell">
+    <section class="landing-auth panel auth-glass" style="max-width: 720px; margin: 0 auto;">
+      <div class="auth-title">
+        <h2>Contact US</h2>
+        <p class="muted">Send us a message and we'll get back to you soon.</p>
+      </div>
+
+      <form id="contactForm" class="card login-card">
+        <label for="contactName">Your Name</label>
+        <input id="contactName" type="text" placeholder="Full name" required />
+
+        <label for="contactEmail">Your Email</label>
+        <input id="contactEmail" type="email" placeholder="your@email.com" required />
+
+        <label for="contactSubject">Subject</label>
+        <input id="contactSubject" type="text" placeholder="What is this about?" required />
+
+        <label for="contactMessage">Message</label>
+        <textarea id="contactMessage" rows="6" placeholder="Your message here..." required></textarea>
+
+        <button class="btn btn-primary" type="submit">Send Message</button>
+        <a href="index.html" class="tiny-link">Back to Home</a>
+      </form>
+
+      <p id="contactResponse" class="message"></p>
+    </section>
+  </main>
+
+  <footer class="page-footer public-footer">COM-SERVE | Community Funeral Contribution System</footer>
+
+  <script src="script.js"></script>
+</body>
+</html>

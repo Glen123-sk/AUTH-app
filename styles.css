@@ -452,6 +452,26 @@ textarea {
   margin-top: 0.5rem;
 }
 
+.payment-methods {
+  margin-top: 0.75rem;
+}
+
+.payment-methods-summary {
+  list-style: none;
+}
+
+.payment-methods-summary::-webkit-details-marker {
+  display: none;
+}
+
+.payment-methods-panel {
+  margin-top: 0.7rem;
+  padding: 0.85rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--surface) 92%, var(--accent) 8%);
+}
+
 .inline-col {
   display: grid;
   gap: 0.45rem;
