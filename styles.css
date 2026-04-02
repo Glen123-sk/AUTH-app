@@ -890,6 +890,31 @@ body[data-page="login"] .auth-title {
   margin-bottom: 0.6rem;
 }
 
+body[data-page="login"] .access-guide {
+  margin: 0.8rem 0 1rem;
+  display: grid;
+  gap: 0.6rem;
+  grid-template-columns: 1fr;
+}
+
+body[data-page="login"] .access-card {
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 0.8rem 0.9rem;
+  background: color-mix(in srgb, var(--surface) 92%, var(--accent) 8%);
+}
+
+body[data-page="login"] .access-card strong {
+  display: block;
+  margin-bottom: 0.2rem;
+  font-family: "Space Grotesk", sans-serif;
+}
+
+body[data-page="login"] .access-card span {
+  color: var(--muted);
+  font-size: 0.93rem;
+}
+
 body[data-page="login"] .elegant-auth-grid {
   margin-top: 0;
 }
@@ -925,6 +950,10 @@ body[data-page="login"] .strip-item {
 @media (min-width: 760px) {
   body[data-page="login"] .landing-shell {
     grid-template-columns: 1fr;
+  }
+
+  body[data-page="login"] .access-guide {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   body[data-page="login"] .hero-ribbon {
