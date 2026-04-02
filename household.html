@@ -33,6 +33,7 @@
       <header class="site-header">
         <div>
           <h1 class="page-title">Household Dashboard</h1>
+          <p class="muted" id="profileName">Household</p>
           <p class="muted">Monitor wallet, dues, and payment history.</p>
         </div>
         <div class="top-actions">
@@ -57,7 +58,6 @@
       <article class="card">
         <h3><span class="material-symbols-rounded icon">fact_check</span>Payment Status</h3>
         <p id="paymentStatus" class="status-pill">Pending Payment</p>
-        <p class="muted" id="consistencyText">0 of 0 events paid</p>
       </article>
 
       <article class="card">
@@ -71,11 +71,6 @@
         <p class="muted" id="upcomingDueDate">-</p>
         <p class="value-sm" id="upcomingDueAmount">R0.00</p>
       </article>
-        </section>
-
-        <section class="card">
-          <h3><span class="material-symbols-rounded icon">monitoring</span>Personal Progress</h3>
-          <canvas id="householdProgressChart" width="880" height="220"></canvas>
         </section>
 
         <section class="card">
