@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>COM-SERVE Household Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:FILL@1" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body data-page="household-dashboard">
+  <div id="toastContainer" class="toast-container"></div>
+  <div id="modalRoot"></div>
+
+  <div class="app-shell">
+    <aside class="app-sidebar">
+      <div class="sidebar-head">
+        <div class="logo">COM-SERVE</div>
+        <button class="btn btn-ghost nav-toggle" type="button" aria-label="Toggle menu" data-nav-target="householdNav">Menu</button>
+      </div>
+      <p class="muted">Household Portal</p>
+      <nav class="nav nav-stack" id="householdNav">
+        <a href="household.html">Dashboard</a>
+        <a href="payments.html">Payments</a>
+        <a href="announcements.html">Announcements</a>
+        <a href="settings.html">Settings</a>
+      </nav>
+    </aside>
+
+    <div class="app-main">
+      <header class="site-header">
+        <div>
+          <h1 class="page-title">Household Dashboard</h1>
+          <p class="muted">Monitor wallet, dues, and payment history.</p>
+        </div>
+        <div class="top-actions">
+          <button id="themeToggle" class="btn btn-ghost" type="button">Theme</button>
+          <button id="logoutBtn" class="btn btn-danger" type="button">Logout</button>
+        </div>
+      </header>
+
+      <main class="page-wrap">
+        <section class="card banner" id="householdBanner"></section>
+
+        <section class="grid grid-4">
+      <article class="card">
+        <h3><span class="material-symbols-rounded icon">account_balance_wallet</span>Wallet Balance</h3>
+        <p class="value" id="walletBalance">R0.00</p>
+        <div class="inline-row">
+          <input id="topupAmount" type="number" min="1" placeholder="Amount" />
+          <button id="topupBtn" class="btn btn-primary" type="button">Top Up Wallet</button>
+        </div>
+      </article>
+
+      <article class="card">
+        <h3><span class="material-symbols-rounded icon">fact_check</span>Payment Status</h3>
+        <p id="paymentStatus" class="status-pill">Pending Payment</p>
+        <p class="muted" id="consistencyText">0 of 0 events paid</p>
+      </article>
+
+      <article class="card">
+        <h3><span class="material-symbols-rounded icon">warning</span>Fines Owed</h3>
+        <p class="value" id="finesOwed">R0.00</p>
+      </article>
+
+      <article class="card">
+        <h3><span class="material-symbols-rounded icon">event_upcoming</span>Upcoming Due</h3>
+        <p id="upcomingDueTitle">No dues</p>
+        <p class="muted" id="upcomingDueDate">-</p>
+        <p class="value-sm" id="upcomingDueAmount">R0.00</p>
+      </article>
+        </section>
+
+        <section class="card">
+          <h3><span class="material-symbols-rounded icon">monitoring</span>Personal Progress</h3>
+          <canvas id="householdProgressChart" width="880" height="220"></canvas>
+        </section>
+
+        <section class="card">
+          <h3>Quick Actions</h3>
+          <div class="inline-row wrap">
+            <button id="payNowBtn" class="btn btn-primary" type="button">Pay Now</button>
+            <a class="btn btn-ghost" href="payments.html">Open Payment Page</a>
+          </div>
+        </section>
+
+        <section class="grid grid-2">
+          <article class="card">
+            <h3><span class="material-symbols-rounded icon">notifications</span>Notifications & Alerts</h3>
+            <div id="householdAlerts" class="list"></div>
+          </article>
+
+          <article class="card">
+            <h3><span class="material-symbols-rounded icon">history</span>Payment History</h3>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Date</th>
+                    <th>Amount</th>
+                    <th>Method</th>
+                    <th>Type</th>
+                    <th>Reference</th>
+                  </tr>
+                </thead>
+                <tbody id="householdHistoryBody"></tbody>
+              </table>
+            </div>
+          </article>
+        </section>
+      </main>
+
+      <footer class="page-footer">COM-SERVE Household Portal</footer>
+    </div>
+  </div>
+
+  <button id="stickyPayBtn" class="btn btn-primary sticky-pay" type="button">Pay Now</button>
+
+  <script src="script.js"></script>
+</body>
+</html>

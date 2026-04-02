@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>COM-SERVE Login</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Space+Grotesk:wght@400;600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body data-page="login">
+  <div class="bg-layer">
+    <div class="orb orb-a"></div>
+    <div class="orb orb-b"></div>
+    <div class="orb orb-c"></div>
+  </div>
+
+  <main class="landing-shell">
+    <section class="landing-auth panel auth-glass">
+      <div class="auth-title">
+        <h2>Secure Access</h2>
+        <p class="muted">Select your role to continue.</p>
+      </div>
+
+      <div class="auth-grid elegant-auth-grid">
+        <form id="householdLoginForm" class="card login-card">
+          <h3>Household Login</h3>
+          <label for="householdId">Household ID</label>
+          <input id="householdId" type="text" placeholder="HH001" required />
+
+          <label for="householdPassword">Password</label>
+          <input id="householdPassword" type="password" placeholder="Password" required />
+
+          <button class="btn btn-primary" type="submit">Enter Household Portal</button>
+          <a href="#" id="forgotPasswordLink" class="tiny-link">Forgot password?</a>
+          <small class="helper-text">Demo: HH001 / pass001</small>
+        </form>
+
+        <form id="adminLoginForm" class="card login-card">
+          <h3>Admin Login</h3>
+          <label for="adminUsername">Username</label>
+          <input id="adminUsername" type="text" placeholder="admin" required />
+
+          <label for="adminPassword">Password</label>
+          <input id="adminPassword" type="password" placeholder="Password" required />
+
+          <button class="btn btn-primary" type="submit">Enter Admin Center</button>
+          <small class="helper-text">Demo: admin / admin123</small>
+        </form>
+      </div>
+
+      <p id="loginMessage" class="message"></p>
+    </section>
+  </main>
+
+  <section class="landing-footer-strip">
+    <div class="strip-item">Structured Household Workflows</div>
+    <div class="strip-item">Admin Oversight With Real-Time Metrics</div>
+    <div class="strip-item">Mobile-Ready, Community-First Experience</div>
+  </section>
+
+  <footer class="page-footer public-footer">COM-SERVE | Community Funeral Contribution System</footer>
+
+  <script src="script.js"></script>
+</body>
+</html>

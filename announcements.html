@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>COM-SERVE Announcements</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:FILL@1" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body data-page="announcements">
+  <div id="toastContainer" class="toast-container"></div>
+  <div id="modalRoot"></div>
+
+  <div class="app-shell">
+    <aside class="app-sidebar">
+      <div class="sidebar-head">
+        <div class="logo">COM-SERVE</div>
+        <button class="btn btn-ghost nav-toggle" type="button" aria-label="Toggle menu" data-nav-target="householdNav">Menu</button>
+      </div>
+      <p class="muted">Household Portal</p>
+      <nav class="nav nav-stack" id="householdNav">
+        <a href="household.html">Dashboard</a>
+        <a href="payments.html">Payments</a>
+        <a href="announcements.html">Announcements</a>
+        <a href="settings.html">Settings</a>
+      </nav>
+    </aside>
+
+    <div class="app-main">
+      <header class="site-header">
+        <div>
+          <h1 class="page-title">Announcements</h1>
+          <p class="muted">Community updates and household notices.</p>
+        </div>
+        <div class="top-actions">
+          <button id="themeToggle" class="btn btn-ghost" type="button">Theme</button>
+          <button id="logoutBtn" class="btn btn-danger" type="button">Logout</button>
+        </div>
+      </header>
+
+      <main class="page-wrap">
+        <section class="card">
+      <h2><span class="material-symbols-rounded icon">newspaper</span>Community Announcements</h2>
+      <div id="announcementsList" class="list"></div>
+        </section>
+
+        <section class="card">
+          <h2><span class="material-symbols-rounded icon">notifications</span>Your Latest Notifications</h2>
+          <div id="noticesList" class="list"></div>
+        </section>
+      </main>
+
+      <footer class="page-footer">COM-SERVE Announcements</footer>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>

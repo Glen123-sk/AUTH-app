@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>COM-SERVE Admin Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:FILL@1" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body data-page="admin-dashboard">
+  <div id="toastContainer" class="toast-container"></div>
+  <div id="modalRoot"></div>
+
+  <div class="app-shell admin-shell">
+    <aside class="app-sidebar">
+      <div class="sidebar-head">
+        <div class="logo">COM-SERVE</div>
+        <button class="btn btn-ghost nav-toggle" type="button" aria-label="Toggle menu" data-nav-target="adminNav">Menu</button>
+      </div>
+      <p class="muted">Admin Control Center</p>
+      <nav class="nav nav-stack" id="adminNav">
+        <a href="admin.html">Admin Dashboard</a>
+      </nav>
+    </aside>
+
+    <div class="app-main">
+      <header class="site-header">
+        <div>
+          <h1 class="page-title">Admin Dashboard</h1>
+          <p class="muted">Manage households, funeral events, collections, and community updates.</p>
+        </div>
+        <div class="top-actions">
+          <button id="themeToggle" class="btn btn-ghost" type="button">Theme</button>
+          <button id="logoutBtn" class="btn btn-danger" type="button">Logout</button>
+        </div>
+      </header>
+
+      <main class="page-wrap">
+        <section class="grid grid-4">
+      <article class="card">
+        <h3>Total Households</h3>
+        <p id="adminMetricHouseholds" class="value">0</p>
+      </article>
+      <article class="card">
+        <h3>Paid vs Unpaid</h3>
+        <p id="adminMetricPaidUnpaid" class="value">0 / 0</p>
+      </article>
+      <article class="card">
+        <h3>Total Collected</h3>
+        <p id="adminMetricCollected" class="value">R0.00</p>
+      </article>
+      <article class="card">
+        <h3>Total Fines</h3>
+        <p id="adminMetricFines" class="value">R0.00</p>
+      </article>
+        </section>
+
+        <section class="grid grid-2">
+          <article class="card">
+            <h2><span class="material-symbols-rounded icon">event</span>Trigger Funeral Event</h2>
+            <div class="inline-row wrap">
+              <input id="funeralTitle" type="text" placeholder="Funeral title" />
+              <input id="funeralDueDays" type="number" min="1" value="7" />
+              <button id="triggerFuneralBtn" class="btn btn-primary" type="button">Trigger Event</button>
+            </div>
+          </article>
+
+          <article class="card">
+            <h2><span class="material-symbols-rounded icon">campaign</span>Send Announcement</h2>
+            <div class="inline-col">
+              <input id="adminAnnouncementTitle" type="text" placeholder="Title" />
+              <input id="adminAnnouncementBody" type="text" placeholder="Announcement message" />
+              <button id="postAnnouncementBtn" class="btn btn-primary" type="button">Post Announcement</button>
+            </div>
+          </article>
+        </section>
+
+        <section class="grid grid-2">
+          <article class="card">
+            <h3><span class="material-symbols-rounded icon">bar_chart</span>Charts</h3>
+            <canvas id="chartStatus" width="420" height="220"></canvas>
+            <canvas id="chartFunds" width="420" height="220"></canvas>
+            <canvas id="chartFines" width="420" height="220"></canvas>
+          </article>
+
+          <article class="card">
+            <h3>Reports</h3>
+            <button id="adminExportCsv" class="btn btn-ghost" type="button">Export Payment Report (CSV)</button>
+            <h4>Recent Activity</h4>
+            <div id="adminActivity" class="list"></div>
+          </article>
+        </section>
+
+        <section class="card">
+          <h2>Household Management</h2>
+          <input id="adminSearch" type="text" placeholder="Search household ID" />
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Area</th>
+                  <th>Wallet</th>
+                  <th>Outstanding</th>
+                  <th>Fines</th>
+                  <th>Latest Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="adminHouseholdBody"></tbody>
+            </table>
+          </div>
+        </section>
+      </main>
+
+      <footer class="page-footer">COM-SERVE Admin Center</footer>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
