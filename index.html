@@ -37,13 +37,14 @@
       <div class="auth-grid elegant-auth-grid">
         <form id="householdLoginForm" class="card login-card">
           <h3>Household Login</h3>
-          <label for="householdId">Household ID</label>
-          <input id="householdId" type="text" placeholder="HH001" required />
+          <label for="householdIdentifier">Household ID or Email</label>
+          <input id="householdIdentifier" type="text" placeholder="HH001 or name@example.com" required />
 
           <label for="householdPassword">Password</label>
           <input id="householdPassword" type="password" placeholder="Password" required />
 
           <button class="btn btn-primary" type="submit">Log In</button>
+          <a href="register.html" id="registerLink" class="tiny-link">Register</a>
           <a href="forgot-password.html" id="forgotPasswordLink" class="tiny-link">Forgot password?</a>
           <small class="helper-text">Demo: HH001 / pass001</small>
         </form>

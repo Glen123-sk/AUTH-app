@@ -95,6 +95,37 @@ function emailTargetOf(household) {
   return (household.email || "").trim();
 }
 
+function displayNameOf(household) {
+  return (household && (household.displayName || household.name || household.id)) || "Household";
+}
+
+function normalizeEmail(email) {
+  return String(email || "").trim().toLowerCase();
+}
+
+function nextHouseholdId() {
+  const maxNumber = state.data.households.reduce((max, household) => {
+    const match = String(household.id || "").match(/^HH(\d{3})$/i);
+    if (!match) {
+      return max;
+    }
+    return Math.max(max, Number(match[1]));
+  }, 0);
+
+  return `HH${String(maxNumber + 1).padStart(3, "0")}`;
+}
+
+function findHouseholdByLoginIdentifier(identifier) {
+  const value = String(identifier || "").trim();
+  if (!value) {
+    return null;
+  }
+
+  const email = normalizeEmail(value);
+  const id = value.toUpperCase();
+  return state.data.households.find((household) => household.id === id || normalizeEmail(household.email) === email);
+}
+
 async function sendEmailMessage({ toEmail, toName, subject, message, replyTo = "", meta = {} }) {
   const cfg = emailConfig();
   if (!cfg.serviceId || !cfg.templateId || !cfg.publicKey) {
@@ -238,6 +269,7 @@ function seedData() {
     const id = `HH${String(i).padStart(3, "0")}`;
     households.push({
       id,
+      displayName: `Household ${i}`,
       password: `pass${String(i).padStart(3, "0")}`,
       area: areas[(i - 1) % areas.length],
       active: i !== 7 && i !== 14,
@@ -351,6 +383,11 @@ function loadData() {
   state.data.notifications = state.data.notifications || [];
   state.data.activity = state.data.activity || [];
   state.data.emailLog = state.data.emailLog || [];
+  state.data.households = (state.data.households || []).map((household) => ({
+    displayName: household.displayName || household.name || household.id,
+    email: normalizeEmail(household.email),
+    ...household,
+  }));
   initSecurityStructures();
   applyFines(state.data);
   saveData();
@@ -1034,11 +1071,19 @@ function initLoginPage() {
 
   const message = document.getElementById("loginMessage");
   const forgotLink = document.getElementById("forgotPasswordLink");
+  const registerLink = document.getElementById("registerLink");
 
   if (forgotLink) {
     forgotLink.addEventListener("click", (e) => {
       e.preventDefault();
       window.location.href = "forgot-password.html";
+    });
+  }
+
+  if (registerLink) {
+    registerLink.addEventListener("click", (e) => {
+      e.preventDefault();
+      window.location.href = "register.html";
     });
   }
 
@@ -1050,20 +1095,20 @@ function initLoginPage() {
       return;
     }
 
-    const id = document.getElementById("householdId").value.trim().toUpperCase();
+    const identifier = document.getElementById("householdIdentifier").value.trim();
     const password = document.getElementById("householdPassword").value;
 
-    const h = getHouseholdById(id);
+    const h = findHouseholdByLoginIdentifier(identifier);
     if (!h || h.password !== password) {
       recordFailedLogin("household");
       message.textContent = "Invalid household credentials.";
-      addAudit("login_failed", `household:${id || "unknown"}`);
+      addAudit("login_failed", `household:${identifier || "unknown"}`);
       return;
     }
 
     clearFailedLogin("household");
-    state.session = { role: "household", id, lastSeen: Date.now() };
-    addAudit("login_success", `household:${id}`);
+    state.session = { role: "household", id: h.id, lastSeen: Date.now() };
+    addAudit("login_success", `household:${h.id}`);
     saveSession();
     saveData();
     window.location.href = "household.html";
@@ -1096,6 +1141,49 @@ function initLoginPage() {
   });
 }
 
+function registerHousehold({ name, email, area, password }) {
+  const normalizedEmail = normalizeEmail(email);
+  const trimmedName = String(name || "").trim();
+  const trimmedArea = String(area || "").trim();
+  const nextId = nextHouseholdId();
+
+  if (!trimmedName || !trimmedArea || !normalizedEmail || !password) {
+    return { ok: false, message: "Complete all registration fields." };
+  }
+
+  if (state.data.households.some((household) => normalizeEmail(household.email) === normalizedEmail)) {
+    return { ok: false, message: "That email is already registered." };
+  }
+
+  state.data.households.push({
+    id: nextId,
+    displayName: trimmedName,
+    password,
+    area: trimmedArea,
+    active: true,
+    email: normalizedEmail,
+    walletBalance: 0,
+    dues: {},
+    paymentHistory: [],
+  });
+
+  addAudit("register_household", `${nextId}:${normalizedEmail}`);
+  addNotification(nextId, `Welcome to COM-SERVE, ${trimmedName}.`, "info");
+  saveData();
+
+  if (normalizedEmail) {
+    queueEmailMessage({
+      toEmail: normalizedEmail,
+      toName: trimmedName,
+      subject: "Welcome to COM-SERVE",
+      message: `Your household account is ready. Household ID: ${nextId}. Use your email and password to log in.`,
+      meta: { householdId: nextId, displayName: trimmedName, area: trimmedArea },
+    });
+  }
+
+  return { ok: true, id: nextId };
+}
+
 function initForgotPasswordPage() {
   if (state.session) {
     window.location.href = state.session.role === "admin" ? "admin.html" : "household.html";
@@ -1105,13 +1193,11 @@ function initForgotPasswordPage() {
   const roleSelect = document.getElementById("resetRole");
   const identifier = document.getElementById("resetIdentifier");
   const verifier = document.getElementById("resetVerifier");
-  const verifierHint = document.getElementById("resetVerifierHint");
   const form = document.getElementById("forgotPasswordForm");
   const msg = document.getElementById("forgotMessage");
+  const verifierHint = document.getElementById("resetVerifierHint");
 
   const syncFields = () => {
-    identifier.placeholder = "HH001";
-    verifier.placeholder = "Section A";
     verifierHint.textContent = "Enter your registered area (for example: Section A).";
   };
 
@@ -1169,6 +1255,53 @@ function initForgotPasswordPage() {
     showToast("Password reset successful.");
     setTimeout(() => {
       window.location.href = "index.html";
+    }, 1200);
+  };
+}
+
+function initRegisterPage() {
+  if (state.session) {
+    window.location.href = state.session.role === "admin" ? "admin.html" : "household.html";
+    return;
+  }
+
+  const form = document.getElementById("registerForm");
+  const message = document.getElementById("registerMessage");
+  const emailInput = document.getElementById("registerEmail");
+  const nameInput = document.getElementById("registerName");
+  const areaInput = document.getElementById("registerArea");
+  const passwordInput = document.getElementById("registerPassword");
+  const confirmInput = document.getElementById("registerConfirmPassword");
+
+  form.onsubmit = (e) => {
+    e.preventDefault();
+
+    if (passwordInput.value !== confirmInput.value) {
+      message.textContent = "Passwords do not match.";
+      message.className = "message";
+      return;
+    }
+
+    const result = registerHousehold({
+      name: nameInput.value,
+      email: emailInput.value,
+      area: areaInput.value,
+      password: passwordInput.value,
+    });
+
+    if (!result.ok) {
+      message.textContent = result.message;
+      message.className = "message";
+      return;
+    }
+
+    state.session = { role: "household", id: result.id, lastSeen: Date.now() };
+    saveSession();
+    message.textContent = "Registration successful. Redirecting to your dashboard...";
+    message.className = "message ok";
+    showToast("Registration successful.");
+    setTimeout(() => {
+      window.location.href = "household.html";
     }, 1200);
   };
 }
@@ -1448,6 +1581,8 @@ function initSettingsPage() {
   }
 
   const h = currentHousehold();
+  const name = displayNameOf(h);
+  document.getElementById("profileName").textContent = name;
   document.getElementById("profileId").textContent = h.id;
   document.getElementById("profileArea").textContent = h.area;
   const profileEmail = document.getElementById("profileEmail");
@@ -1593,7 +1728,7 @@ function renderAdminPage() {
   drawFundsChart(fineSeries, "chartFines", "#d97706", "Fines trend");
 
   const query = document.getElementById("adminSearch").value.trim().toUpperCase();
-  const filtered = households.filter((h) => !query || h.id.includes(query));
+  const filtered = households.filter((h) => !query || h.id.includes(query) || displayNameOf(h).toUpperCase().includes(query));
 
   const body = document.getElementById("adminHouseholdBody");
   body.innerHTML = filtered.length
@@ -1604,6 +1739,7 @@ function renderAdminPage() {
           return `
       <tr>
         <td>${h.id}</td>
+        <td>${displayNameOf(h)}</td>
         <td>${h.area}</td>
         <td>${h.email || "-"}</td>
         <td>${money(h.walletBalance)}</td>
@@ -1614,7 +1750,7 @@ function renderAdminPage() {
       </tr>`;
         })
         .join("")
-    : '<tr><td colspan="7">No households found.</td></tr>';
+    : '<tr><td colspan="8">No households found.</td></tr>';
 
   body.querySelectorAll(".clear-fines-btn").forEach((btn) => {
     btn.addEventListener("click", () => {
@@ -1807,6 +1943,11 @@ function initPage() {
 
   if (page === "login") {
     initLoginPage();
+    return;
+  }
+
+  if (page === "register") {
+    initRegisterPage();
     return;
   }
 
