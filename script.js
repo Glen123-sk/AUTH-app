@@ -1,6 +1,8 @@
 const STORAGE_KEY = "comServeData";
 const SESSION_KEY = "comServeSession";
 const THEME_KEY = "comServeTheme";
+const LOGIN_GUARD_KEY = "comServeLoginGuard";
+const SESSION_TTL_MS = 20 * 60 * 1000;
 
 const money = (v) => `R${Number(v || 0).toFixed(2)}`;
 const todayISO = () => new Date().toISOString().slice(0, 10);
@@ -10,7 +12,90 @@ const uid = () => `${Date.now()}-${Math.floor(Math.random() * 100000)}`;
 const state = {
   data: null,
   session: null,
+  loginGuard: null,
 };
+
+function simpleHash(input) {
+  let hash = 2166136261;
+  for (let i = 0; i < input.length; i += 1) {
+    hash ^= input.charCodeAt(i);
+    hash += (hash << 1) + (hash << 4) + (hash << 7) + (hash << 8) + (hash << 24);
+  }
+  return (hash >>> 0).toString(16).padStart(8, "0");
+}
+
+function initSecurityStructures() {
+  state.data.auditTrail = state.data.auditTrail || [];
+  state.data.runtimeErrors = state.data.runtimeErrors || [];
+}
+
+function addAudit(action, details = "") {
+  if (!state.data) {
+    return;
+  }
+
+  initSecurityStructures();
+  const actor = state.session ? `${state.session.role}:${state.session.id}` : "system";
+  const prevHash = state.data.auditTrail.length ? state.data.auditTrail[0].hash : "GENESIS";
+  const ts = new Date().toISOString();
+  const hash = simpleHash(`${prevHash}|${ts}|${actor}|${action}|${details}`);
+
+  state.data.auditTrail.unshift({
+    id: uid(),
+    ts,
+    actor,
+    action,
+    details,
+    prevHash,
+    hash,
+  });
+
+  state.data.auditTrail = state.data.auditTrail.slice(0, 500);
+}
+
+function verifyAuditTrail() {
+  initSecurityStructures();
+  const list = [...state.data.auditTrail].reverse();
+  let prev = "GENESIS";
+
+  for (let i = 0; i < list.length; i += 1) {
+    const item = list[i];
+    const expected = simpleHash(`${prev}|${item.ts}|${item.actor}|${item.action}|${item.details}`);
+    if (item.prevHash !== prev || item.hash !== expected) {
+      return { ok: false, brokenAt: i + 1 };
+    }
+    prev = item.hash;
+  }
+
+  return { ok: true, brokenAt: null };
+}
+
+function addRuntimeError(source, message) {
+  if (!state.data) {
+    return;
+  }
+
+  initSecurityStructures();
+  state.data.runtimeErrors.unshift({
+    id: uid(),
+    date: new Date().toISOString(),
+    source,
+    message: String(message || "Unknown error").slice(0, 280),
+  });
+  state.data.runtimeErrors = state.data.runtimeErrors.slice(0, 60);
+  saveData();
+}
+
+function bindGlobalErrorCapture() {
+  window.addEventListener("error", (e) => {
+    addRuntimeError("window.error", e.message || "Unhandled error");
+  });
+
+  window.addEventListener("unhandledrejection", (e) => {
+    const reason = e.reason && e.reason.message ? e.reason.message : String(e.reason || "Unhandled rejection");
+    addRuntimeError("unhandledrejection", reason);
+  });
+}
 
 function seedData() {
   const areas = ["Section A", "Section B", "Section C", "Section D"];
@@ -51,6 +136,8 @@ function seedData() {
     ],
     notifications: [],
     activity: [],
+    auditTrail: [],
+    runtimeErrors: [],
   };
 
   // Demo events and mixed payment scenarios.
@@ -129,6 +216,7 @@ function loadData() {
   state.data.announcements = state.data.announcements || [];
   state.data.notifications = state.data.notifications || [];
   state.data.activity = state.data.activity || [];
+  initSecurityStructures();
   applyFines(state.data);
   saveData();
 }
@@ -149,6 +237,18 @@ function loadSession() {
   } catch {
     state.session = null;
     localStorage.removeItem(SESSION_KEY);
+    return;
+  }
+
+  if (!state.session.lastSeen) {
+    state.session.lastSeen = Date.now();
+    saveSession();
+    return;
+  }
+
+  if (Date.now() - Number(state.session.lastSeen) > SESSION_TTL_MS) {
+    state.session = null;
+    localStorage.removeItem(SESSION_KEY);
   }
 }
 
@@ -159,6 +259,73 @@ function saveSession() {
   }
 
   localStorage.setItem(SESSION_KEY, JSON.stringify(state.session));
+}
+
+function touchSession() {
+  if (!state.session) {
+    return;
+  }
+
+  state.session.lastSeen = Date.now();
+  saveSession();
+}
+
+function bindSessionHeartbeat() {
+  const bump = () => touchSession();
+  ["click", "keydown", "mousemove", "touchstart"].forEach((evt) => {
+    window.addEventListener(evt, bump, { passive: true });
+  });
+}
+
+function loadLoginGuard() {
+  const raw = localStorage.getItem(LOGIN_GUARD_KEY);
+  if (!raw) {
+    state.loginGuard = { household: { failed: 0, lockedUntil: 0 }, admin: { failed: 0, lockedUntil: 0 } };
+    return;
+  }
+
+  try {
+    state.loginGuard = JSON.parse(raw);
+  } catch {
+    state.loginGuard = { household: { failed: 0, lockedUntil: 0 }, admin: { failed: 0, lockedUntil: 0 } };
+  }
+}
+
+function saveLoginGuard() {
+  localStorage.setItem(LOGIN_GUARD_KEY, JSON.stringify(state.loginGuard));
+}
+
+function canAttemptLogin(kind) {
+  const record = state.loginGuard[kind];
+  if (!record || !record.lockedUntil) {
+    return { ok: true, waitSec: 0 };
+  }
+
+  const remain = record.lockedUntil - Date.now();
+  if (remain <= 0) {
+    record.lockedUntil = 0;
+    saveLoginGuard();
+    return { ok: true, waitSec: 0 };
+  }
+
+  return { ok: false, waitSec: Math.ceil(remain / 1000) };
+}
+
+function recordFailedLogin(kind) {
+  const record = state.loginGuard[kind];
+  record.failed += 1;
+  if (record.failed >= 5) {
+    record.lockedUntil = Date.now() + 5 * 60 * 1000;
+    record.failed = 0;
+  }
+  saveLoginGuard();
+}
+
+function clearFailedLogin(kind) {
+  const record = state.loginGuard[kind];
+  record.failed = 0;
+  record.lockedUntil = 0;
+  saveLoginGuard();
 }
 
 function addNotification(target, message, level = "info") {
@@ -476,6 +643,7 @@ function payDue(household, funeralId, method) {
 
   addNotification(household.id, "Payment successful.", "info");
   addActivity(`${household.id} paid ${funeralId} via ${method}.`);
+  addAudit("payment", `${household.id} -> ${funeralId} (${method})`);
   saveData();
   return { ok: true, message: `Payment successful via ${method}.` };
 }
@@ -491,6 +659,7 @@ function topupHousehold(household, amount) {
     note: "Household wallet top-up",
   });
   addNotification(household.id, `Wallet credited with ${money(amount)}.`, "info");
+  addAudit("wallet_topup", `${household.id} +${money(amount)}`);
   saveData();
 }
 
@@ -541,6 +710,7 @@ function triggerFuneralEvent(title, dueDays) {
 
   addNotification("all", `New funeral contribution required: ${money(event.amount)}.`, "info");
   addActivity(`Admin triggered event: ${title}.`);
+  addAudit("trigger_event", `${title} due ${event.dueDate}`);
   saveData();
 }
 
@@ -553,7 +723,45 @@ function postAnnouncement(title, body) {
   });
   addNotification("all", `Announcement: ${title}`, "info");
   addActivity(`Admin posted announcement: ${title}.`);
+  addAudit("announcement", title);
   saveData();
+}
+
+function exportBackupJson() {
+  const blob = new Blob([JSON.stringify(state.data, null, 2)], { type: "application/json;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = `com-serve-backup-${todayISO()}.json`;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(url);
+  addAudit("backup_export", "Admin exported full backup");
+  saveData();
+}
+
+function importBackupFromFile(file, onDone) {
+  const reader = new FileReader();
+  reader.onload = () => {
+    try {
+      const parsed = JSON.parse(reader.result);
+      if (!parsed || !Array.isArray(parsed.households) || !parsed.config || !parsed.admin) {
+        showToast("Backup file is invalid.", "error");
+        return;
+      }
+
+      state.data = parsed;
+      initSecurityStructures();
+      addAudit("backup_restore", `Admin restored backup from ${file.name}`);
+      saveData();
+      showToast("Backup restored successfully.");
+      onDone();
+    } catch {
+      showToast("Could not read backup file.", "error");
+    }
+  };
+  reader.readAsText(file);
 }
 
 function exportAdminCsv() {
@@ -665,32 +873,54 @@ function initLoginPage() {
 
   document.getElementById("householdLoginForm").addEventListener("submit", (e) => {
     e.preventDefault();
+    const guard = canAttemptLogin("household");
+    if (!guard.ok) {
+      message.textContent = `Too many attempts. Try again in ${guard.waitSec}s.`;
+      return;
+    }
+
     const id = document.getElementById("householdId").value.trim().toUpperCase();
     const password = document.getElementById("householdPassword").value;
 
     const h = getHouseholdById(id);
     if (!h || h.password !== password) {
+      recordFailedLogin("household");
       message.textContent = "Invalid household credentials.";
+      addAudit("login_failed", `household:${id || "unknown"}`);
       return;
     }
 
-    state.session = { role: "household", id };
+    clearFailedLogin("household");
+    state.session = { role: "household", id, lastSeen: Date.now() };
+    addAudit("login_success", `household:${id}`);
     saveSession();
+    saveData();
     window.location.href = "household.html";
   });
 
   document.getElementById("adminLoginForm").addEventListener("submit", (e) => {
     e.preventDefault();
+    const guard = canAttemptLogin("admin");
+    if (!guard.ok) {
+      message.textContent = `Too many attempts. Try again in ${guard.waitSec}s.`;
+      return;
+    }
+
     const username = document.getElementById("adminUsername").value.trim();
     const password = document.getElementById("adminPassword").value;
 
     if (username !== state.data.admin.username || password !== state.data.admin.password) {
+      recordFailedLogin("admin");
       message.textContent = "Invalid admin credentials.";
+      addAudit("login_failed", `admin:${username || "unknown"}`);
       return;
     }
 
-    state.session = { role: "admin", id: "ADMIN" };
+    clearFailedLogin("admin");
+    state.session = { role: "admin", id: "ADMIN", lastSeen: Date.now() };
+    addAudit("login_success", "admin");
     saveSession();
+    saveData();
     window.location.href = "admin.html";
   });
 
@@ -1002,6 +1232,7 @@ function initSettingsPage() {
     }
 
     h.password = next;
+    addAudit("password_change", `${h.id}`);
     saveData();
     msg.textContent = "Password updated successfully.";
     msg.className = "message ok";
@@ -1020,6 +1251,7 @@ function renderAdminPage() {
   let unpaid = 0;
   let collected = 0;
   let fines = 0;
+  initSecurityStructures();
 
   households.forEach((h) => {
     const t = totals(h);
@@ -1045,6 +1277,16 @@ function renderAdminPage() {
   document.getElementById("adminMetricPaidUnpaid").textContent = `${paid} / ${unpaid}`;
   document.getElementById("adminMetricCollected").textContent = money(collected);
   document.getElementById("adminMetricFines").textContent = money(fines);
+  const runtimeCount = state.data.runtimeErrors.length;
+  const runtimeMetric = document.getElementById("adminMetricRuntime");
+  if (runtimeMetric) {
+    runtimeMetric.textContent = String(runtimeCount);
+  }
+
+  const auditMetric = document.getElementById("adminMetricAudit");
+  if (auditMetric) {
+    auditMetric.textContent = String(state.data.auditTrail.length);
+  }
 
   drawStatusChart(paid, unpaid);
 
@@ -1112,6 +1354,7 @@ function renderAdminPage() {
 
       addNotification(id, "Admin cleared your outstanding fines.", "info");
       addActivity(`Admin cleared fines for ${id}.`);
+      addAudit("clear_fines", id);
       saveData();
       renderAdminPage();
       showToast(`Fines cleared for ${id}.`);
@@ -1122,6 +1365,16 @@ function renderAdminPage() {
   activity.innerHTML = state.data.activity.length
     ? state.data.activity.slice(0, 12).map((a) => `<div class="list-item">${new Date(a.date).toLocaleString()} - ${a.text}</div>`).join("")
     : '<div class="list-item">No activity yet.</div>';
+
+  const runtimeList = document.getElementById("adminRuntime");
+  if (runtimeList) {
+    runtimeList.innerHTML = state.data.runtimeErrors.length
+      ? state.data.runtimeErrors
+          .slice(0, 8)
+          .map((e) => `<div class="list-item warn">${new Date(e.date).toLocaleString()} - ${e.source}: ${e.message}</div>`)
+          .join("")
+      : '<div class="list-item">No runtime errors captured.</div>';
+  }
 }
 
 function initAdminPage() {
@@ -1159,6 +1412,45 @@ function initAdminPage() {
   };
 
   document.getElementById("adminExportCsv").onclick = exportAdminCsv;
+  const backupBtn = document.getElementById("adminExportBackup");
+  if (backupBtn) {
+    backupBtn.onclick = () => {
+      exportBackupJson();
+      showToast("Backup exported.");
+    };
+  }
+
+  const verifyAuditBtn = document.getElementById("adminVerifyAudit");
+  if (verifyAuditBtn) {
+    verifyAuditBtn.onclick = () => {
+      const result = verifyAuditTrail();
+      if (result.ok) {
+        showToast("Audit chain is valid.");
+      } else {
+        showToast(`Audit chain broken at entry ${result.brokenAt}.`, "error");
+      }
+    };
+  }
+
+  const restoreInput = document.getElementById("adminRestoreBackupFile");
+  const restoreBtn = document.getElementById("adminRestoreBackup");
+  if (restoreBtn && restoreInput) {
+    restoreBtn.onclick = () => {
+      const file = restoreInput.files && restoreInput.files[0];
+      if (!file) {
+        showToast("Select a backup file first.", "error");
+        return;
+      }
+
+      confirmModal({
+        title: "Restore Backup",
+        body: "This will replace all current data. Continue?",
+        confirmText: "Restore",
+        onConfirm: () => importBackupFromFile(file, renderAdminPage),
+      });
+    };
+  }
+
   document.getElementById("adminSearch").oninput = renderAdminPage;
 
   renderAdminPage();
@@ -1166,8 +1458,11 @@ function initAdminPage() {
 
 function initPage() {
   loadData();
+  loadLoginGuard();
   loadSession();
   initTheme();
+  bindGlobalErrorCapture();
+  bindSessionHeartbeat();
   bindLogout();
   bindThemeToggle();
   bindMobileNav();
