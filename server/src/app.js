@@ -21,7 +21,7 @@ const config = {
   smtpUser: process.env.SMTP_USER,
   smtpPass: process.env.SMTP_PASS,
   smtpFrom: process.env.SMTP_FROM || 'Auth App <no-reply@example.com>',
-  corsOrigin: process.env.CORS_ORIGIN || 'https://websystem.systems,https://www.websystem.systems,http://localhost:5000,http://127.0.0.1:5000'
+  corsOrigin: process.env.CORS_ORIGIN || 'https://nexl.me,https://www.nexl.me,http://localhost:5000,http://127.0.0.1:5000'
 };
 
 function validateConfig() {
