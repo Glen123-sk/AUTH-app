@@ -20,8 +20,8 @@ function getApiBaseUrl() {
     return 'http://localhost:5000';
   }
 
-  if (window.location.hostname === 'worksinc.live' || window.location.hostname === 'www.worksinc.live') {
-    return 'https://api.worksinc.live';
+  if (window.location.hostname === 'websystem.systems' || window.location.hostname === 'www.websystem.systems') {
+    return 'https://api.websystem.systems';
   }
 
   return window.location.origin;
