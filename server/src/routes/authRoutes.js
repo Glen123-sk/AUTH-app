@@ -1,6 +1,7 @@
 const express = require('express');
 const rateLimit = require('express-rate-limit');
 const User = require('../models/User');
+const UserProfile = require('../models/UserProfile');
 const PendingSignup = require('../models/PendingSignup');
 const OtpCode = require('../models/OtpCode');
 const Session = require('../models/Session');
@@ -126,6 +127,34 @@ function createAuthMiddleware(jwtSecret, sessionHelpers) {
       return res.status(401).json({ message: 'Invalid or expired access token.' });
     }
   };
+}
+
+function sanitizeProfileInput(body) {
+  const stringFields = ['displayName', 'fullName', 'bio', 'avatarUrl', 'phoneNumber', 'company', 'website', 'location', 'timezone'];
+  const profile = {};
+
+  for (const field of stringFields) {
+    if (typeof body[field] === 'string') {
+      profile[field] = body[field].trim();
+    }
+  }
+
+  if (typeof body.theme === 'string') {
+    const theme = body.theme.trim().toLowerCase();
+    if (['light', 'dark', 'system'].includes(theme)) {
+      profile.theme = theme;
+    }
+  }
+
+  if (typeof body.emailNotifications === 'boolean') {
+    profile.emailNotifications = body.emailNotifications;
+  }
+
+  if (typeof body.marketingEmails === 'boolean') {
+    profile.marketingEmails = body.marketingEmails;
+  }
+
+  return profile;
 }
 
 function createAuthRouter({ mailer, smtpFrom, jwtSecret, jwtExpiresIn, resetTokenExpiresIn, sessionExpiresInDays }) {
@@ -276,6 +305,19 @@ function createAuthRouter({ mailer, smtpFrom, jwtSecret, jwtExpiresIn, resetToke
         });
 
         await PendingSignup.deleteOne({ _id: pending._id });
+
+        await UserProfile.findOneAndUpdate(
+          { user: createdUser._id },
+          {
+            $setOnInsert: {
+              user: createdUser._id,
+              displayName: createdUser.username,
+              fullName: createdUser.username,
+              theme: 'system'
+            }
+          },
+          { upsert: true, new: true }
+        );
 
         await logAuditEvent('register_success', {
           email: normalizedEmail,
@@ -619,6 +661,108 @@ function createAuthRouter({ mailer, smtpFrom, jwtSecret, jwtExpiresIn, resetToke
     } catch (error) {
       console.error(error);
       return res.status(500).json({ message: 'Server error while logging out sessions.' });
+    }
+  });
+
+  router.get('/profile', requireAuth, async (req, res) => {
+    try {
+      const user = await User.findById(req.auth.payload.userId).select('username email createdAt updatedAt');
+      if (!user) {
+        return res.status(404).json({ message: 'User not found.' });
+      }
+
+      const profile = await UserProfile.findOneAndUpdate(
+        { user: req.auth.payload.userId },
+        {
+          $setOnInsert: {
+            user: req.auth.payload.userId,
+            displayName: user.username,
+            fullName: user.username,
+            theme: 'system'
+          }
+        },
+        { upsert: true, new: true }
+      );
+
+      return res.status(200).json({
+        user: {
+          id: String(user._id),
+          username: user.username,
+          email: user.email,
+          createdAt: user.createdAt,
+          updatedAt: user.updatedAt
+        },
+        profile: {
+          id: String(profile._id),
+          displayName: profile.displayName,
+          fullName: profile.fullName,
+          bio: profile.bio,
+          avatarUrl: profile.avatarUrl,
+          phoneNumber: profile.phoneNumber,
+          company: profile.company,
+          website: profile.website,
+          location: profile.location,
+          timezone: profile.timezone,
+          theme: profile.theme,
+          emailNotifications: profile.emailNotifications,
+          marketingEmails: profile.marketingEmails,
+          createdAt: profile.createdAt,
+          updatedAt: profile.updatedAt
+        }
+      });
+    } catch (error) {
+      console.error(error);
+      return res.status(500).json({ message: 'Server error while loading profile.' });
+    }
+  });
+
+  router.put('/profile', requireAuth, async (req, res) => {
+    try {
+      const updates = sanitizeProfileInput(req.body || {});
+      const profile = await UserProfile.findOneAndUpdate(
+        { user: req.auth.payload.userId },
+        {
+          $setOnInsert: {
+            user: req.auth.payload.userId,
+            displayName: '',
+            fullName: '',
+            theme: 'system'
+          },
+          $set: updates
+        },
+        { upsert: true, new: true }
+      );
+
+      await logAuditEvent('profile_updated', {
+        email: req.auth.payload.email,
+        user: req.auth.payload.userId,
+        details: { fields: Object.keys(updates) },
+        req
+      });
+
+      return res.status(200).json({
+        message: 'Profile saved successfully.',
+        profile: {
+          id: String(profile._id),
+          displayName: profile.displayName,
+          fullName: profile.fullName,
+          bio: profile.bio,
+          avatarUrl: profile.avatarUrl,
+          phoneNumber: profile.phoneNumber,
+          company: profile.company,
+          website: profile.website,
+          location: profile.location,
+          timezone: profile.timezone,
+          theme: profile.theme,
+          emailNotifications: profile.emailNotifications,
+          marketingEmails: profile.marketingEmails,
+          createdAt: profile.createdAt,
+          updatedAt: profile.updatedAt
+        }
+      });
+    } catch (error) {
+      console.error(error);
+      return res.status(500).json({ message: 'Server error while saving profile.' });
     }
   });
 

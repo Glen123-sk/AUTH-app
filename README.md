@@ -63,6 +63,7 @@ Open:
 - JWT tokens for login and password reset authorization
 - Session tracking with MongoDB and JWT token IDs
 - Audit logs for signup, login, logout, and reset activity
+- MongoDB-backed user profiles and settings
 
 ## MongoDB collections added
 
@@ -71,3 +72,9 @@ Open:
 - `otp_codes` for password reset codes
 - `sessions` for active login sessions with TTL cleanup
 - `audit_logs` for security and activity history
+- `user_profiles` for display names, preferences, and contact details
+
+## Profile API
+
+- `GET /profile` returns the current user and profile document
+- `PUT /profile` updates profile fields like display name, theme, bio, and contact details
