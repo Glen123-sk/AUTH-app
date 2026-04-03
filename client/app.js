@@ -20,8 +20,8 @@ function getApiBaseUrl() {
     return 'http://localhost:5000';
   }
 
-  if (window.location.hostname === 'websystem.systems' || window.location.hostname === 'www.websystem.systems') {
-    return 'https://api.websystem.systems';
+  if (window.location.hostname === 'nexl.me' || window.location.hostname === 'www.nexl.me') {
+    return 'https://api.nexl.me';
   }
 
   return window.location.origin;
