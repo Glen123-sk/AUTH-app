@@ -1,4 +1,5 @@
 const bcrypt = require('bcryptjs');
+const crypto = require('crypto');
 const jwt = require('jsonwebtoken');
 
 const OTP_EXPIRY_MS = 5 * 60 * 1000;
@@ -65,6 +66,10 @@ function createAccessToken(payload, secret, expiresIn) {
   return jwt.sign(payload, secret, { expiresIn });
 }
 
+function generateTokenId() {
+  return crypto.randomUUID();
+}
+
 function createResetToken(email, secret, expiresIn) {
   return jwt.sign({ email, purpose: 'reset_password' }, secret, { expiresIn });
 }
@@ -78,6 +83,7 @@ module.exports = {
   isValidEmail,
   isStrongPassword,
   generateOtp,
+  generateTokenId,
   hashSecret,
   compareSecret,
   otpExpiresAt,

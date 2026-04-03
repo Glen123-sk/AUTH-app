@@ -61,3 +61,13 @@ Open:
 - OTP request cooldown and rate limiting
 - OTP never sent to frontend responses
 - JWT tokens for login and password reset authorization
+- Session tracking with MongoDB and JWT token IDs
+- Audit logs for signup, login, logout, and reset activity
+
+## MongoDB collections added
+
+- `users` for permanent accounts
+- `pending_signups` for verification flow state
+- `otp_codes` for password reset codes
+- `sessions` for active login sessions with TTL cleanup
+- `audit_logs` for security and activity history

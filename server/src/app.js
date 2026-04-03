@@ -15,6 +15,7 @@ const config = {
   jwtSecret: process.env.JWT_SECRET,
   jwtExpiresIn: process.env.JWT_EXPIRES_IN || '1d',
   resetTokenExpiresIn: process.env.RESET_TOKEN_EXPIRES_IN || '10m',
+  sessionExpiresInDays: Number(process.env.SESSION_EXPIRES_IN_DAYS || 30),
   smtpHost: process.env.SMTP_HOST,
   smtpPort: Number(process.env.SMTP_PORT || 587),
   smtpSecure: String(process.env.SMTP_SECURE || 'false').toLowerCase() === 'true',
@@ -76,7 +77,8 @@ async function startServer() {
       smtpFrom: config.smtpFrom,
       jwtSecret: config.jwtSecret,
       jwtExpiresIn: config.jwtExpiresIn,
-      resetTokenExpiresIn: config.resetTokenExpiresIn
+      resetTokenExpiresIn: config.resetTokenExpiresIn,
+      sessionExpiresInDays: config.sessionExpiresInDays
     })
   );
 
