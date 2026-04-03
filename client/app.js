@@ -6,16 +6,40 @@ function setMessage(id, text, type) {
   if (type) el.classList.add(type);
 }
 
-async function apiPost(url, payload) {
-  const apiUrl = url.startsWith('http')
-    ? url
-    : `${window.location.protocol === 'file:' ? 'http://localhost:5000' : ''}${url}`;
+function getApiBaseUrl() {
+  const configuredBase = window.APP_CONFIG?.API_BASE_URL;
+  if (configuredBase) {
+    return configuredBase.replace(/\/$/, '');
+  }
 
-  const res = await fetch(apiUrl, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload)
-  });
+  if (
+    window.location.protocol === 'file:' ||
+    window.location.hostname === 'localhost' ||
+    window.location.hostname === '127.0.0.1'
+  ) {
+    return 'http://localhost:5000';
+  }
+
+  if (window.location.hostname === 'websystem.systems' || window.location.hostname === 'www.websystem.systems') {
+    return 'https://api.websystem.systems';
+  }
+
+  return window.location.origin;
+}
+
+async function apiPost(url, payload) {
+  const apiUrl = url.startsWith('http') ? url : new URL(url, getApiBaseUrl()).toString();
+
+  let res;
+  try {
+    res = await fetch(apiUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+  } catch (error) {
+    throw new Error(`Unable to reach the authentication API at ${getApiBaseUrl()}. ${error.message}`);
+  }
 
   const data = await res.json().catch(() => ({}));
   if (!res.ok) {
