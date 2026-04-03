@@ -7,7 +7,11 @@ function setMessage(id, text, type) {
 }
 
 async function apiPost(url, payload) {
-  const res = await fetch(url, {
+  const apiUrl = url.startsWith('http')
+    ? url
+    : `${window.location.protocol === 'file:' ? 'http://localhost:5000' : ''}${url}`;
+
+  const res = await fetch(apiUrl, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload)
@@ -25,7 +29,7 @@ function isStrongPassword(value) {
 }
 
 function go(path) {
-  window.location.href = path;
+  window.location.href = path.replace(/^\//, '');
 }
 
 function params() {
