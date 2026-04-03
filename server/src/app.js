@@ -1,5 +1,6 @@
 const path = require('path');
 const express = require('express');
+const cors = require('cors');
 const helmet = require('helmet');
 const dotenv = require('dotenv');
 const { connectDatabase } = require('./config/db');
@@ -19,7 +20,8 @@ const config = {
   smtpSecure: String(process.env.SMTP_SECURE || 'false').toLowerCase() === 'true',
   smtpUser: process.env.SMTP_USER,
   smtpPass: process.env.SMTP_PASS,
-  smtpFrom: process.env.SMTP_FROM || 'Auth App <no-reply@example.com>'
+  smtpFrom: process.env.SMTP_FROM || 'Auth App <no-reply@example.com>',
+  corsOrigin: process.env.CORS_ORIGIN || 'https://websystem.systems,https://www.websystem.systems,http://localhost:5000,http://127.0.0.1:5000'
 };
 
 function validateConfig() {
@@ -53,6 +55,14 @@ async function startServer() {
   const app = express();
 
   app.use(helmet());
+  app.use(
+    cors({
+      origin: config.corsOrigin.split(',').map((origin) => origin.trim()),
+      methods: ['GET', 'POST', 'OPTIONS'],
+      allowedHeaders: ['Content-Type'],
+      credentials: false
+    })
+  );
   app.use(express.json({ limit: '10kb' }));
 
   const mailer = {
