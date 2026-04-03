@@ -246,7 +246,10 @@ function createAuthRouter({ mailer, smtpFrom, jwtSecret, jwtExpiresIn, resetToke
         await pending.save();
       }
 
-      await mailer.sendOtpEmail(smtpFrom, normalizedEmail, otp);
+      const delivery = await mailer.sendOtpEmail(smtpFrom, normalizedEmail, otp);
+      console.log(
+        `OTP email dispatch result (signup): to=${normalizedEmail}, accepted=${delivery.accepted.length}, rejected=${delivery.rejected.length}, messageId=${delivery.messageId}`
+      );
       await logAuditEvent('register_otp_sent', {
         email: normalizedEmail,
         details: { resend: Boolean(resend) },
@@ -437,7 +440,12 @@ function createAuthRouter({ mailer, smtpFrom, jwtSecret, jwtExpiresIn, resetToke
 
       const user = await User.findOne({ email: normalizedEmail });
       if (!user) {
-        return res.status(200).json({ message: 'If this email exists, OTP has been sent.' });
+        await logAuditEvent('password_reset_email_not_found', {
+          email: normalizedEmail,
+          details: { reason: 'unknown_email' },
+          req
+        });
+        return res.status(404).json({ message: 'Email is not registered.' });
       }
 
       let otpRecord = await OtpCode.findOne({ email: normalizedEmail, purpose: 'reset_password' }).sort({ createdAt: -1 });
@@ -477,7 +485,10 @@ function createAuthRouter({ mailer, smtpFrom, jwtSecret, jwtExpiresIn, resetToke
         await otpRecord.save();
       }
 
-      await mailer.sendOtpEmail(smtpFrom, normalizedEmail, otp);
+      const delivery = await mailer.sendOtpEmail(smtpFrom, normalizedEmail, otp);
+      console.log(
+        `OTP email dispatch result (reset): to=${normalizedEmail}, accepted=${delivery.accepted.length}, rejected=${delivery.rejected.length}, messageId=${delivery.messageId}`
+      );
       await logAuditEvent('password_reset_otp_sent', {
         email: normalizedEmail,
         user: user._id,
@@ -485,7 +496,7 @@ function createAuthRouter({ mailer, smtpFrom, jwtSecret, jwtExpiresIn, resetToke
       });
 
       return res.status(200).json({
-        message: 'If this email exists, OTP has been sent.',
+        message: 'OTP sent to email.',
         email: normalizedEmail,
         purpose: 'reset_password'
       });
@@ -530,6 +541,11 @@ function createAuthRouter({ mailer, smtpFrom, jwtSecret, jwtExpiresIn, resetToke
 
       user.passwordHash = await hashSecret(password);
       await user.save();
+
+      await Session.updateMany(
+        { user: user._id, revokedAt: null },
+        { $set: { revokedAt: new Date(), revokedReason: 'password_reset' } }
+      );
 
       await OtpCode.deleteMany({ email: normalizedEmail, purpose: 'reset_password' });
       await logAuditEvent('password_reset_success', {

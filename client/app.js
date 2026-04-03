@@ -1,3 +1,11 @@
+if (window.location.protocol === 'file:') {
+  const currentFile = window.location.pathname.split(/[\\/]/).pop() || 'index.html';
+  const targetUrl = currentFile === 'index.html'
+    ? 'http://localhost:5000/'
+    : `http://localhost:5000/${currentFile}`;
+  window.location.replace(targetUrl);
+}
+
 function setMessage(id, text, type) {
   const el = document.getElementById(id);
   if (!el) return;
