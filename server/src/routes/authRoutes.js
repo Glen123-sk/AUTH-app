@@ -3,11 +3,14 @@ const rateLimit = require('express-rate-limit');
 const User = require('../models/User');
 const PendingSignup = require('../models/PendingSignup');
 const OtpCode = require('../models/OtpCode');
+const Session = require('../models/Session');
+const AuditLog = require('../models/AuditLog');
 const {
   normalizeEmail,
   isValidEmail,
   isStrongPassword,
   generateOtp,
+  generateTokenId,
   hashSecret,
   compareSecret,
   otpExpiresAt,
@@ -18,8 +21,118 @@ const {
   verifyResetToken
 } = require('../utils/auth');
 
-function createAuthRouter({ mailer, smtpFrom, jwtSecret, jwtExpiresIn, resetTokenExpiresIn }) {
+const DEFAULT_SESSION_TTL_DAYS = 30;
+
+function getRequestMetadata(req) {
+  return {
+    ipAddress: String(req.ip || req.headers['x-forwarded-for'] || '').split(',')[0].trim(),
+    userAgent: String(req.get('user-agent') || '')
+  };
+}
+
+function createAuditLogger() {
+  return async function logAuditEvent(event, { email = '', user = null, details = {}, req = null } = {}) {
+    try {
+      const metadata = req ? getRequestMetadata(req) : { ipAddress: '', userAgent: '' };
+      await AuditLog.create({
+        event,
+        email: normalizeEmail(email),
+        user,
+        ipAddress: metadata.ipAddress,
+        userAgent: metadata.userAgent,
+        details
+      });
+    } catch (error) {
+      console.error('Failed to write audit log:', error.message);
+    }
+  };
+}
+
+function createSessionHelpers(sessionTtlDays) {
+  const ttlDays = Number(sessionTtlDays) > 0 ? Number(sessionTtlDays) : DEFAULT_SESSION_TTL_DAYS;
+  const ttlMs = ttlDays * 24 * 60 * 60 * 1000;
+
+  async function issueSession({ userId, tokenId, req }) {
+    const metadata = getRequestMetadata(req);
+    const tokenIssuedAt = new Date();
+    const expiresAt = new Date(Date.now() + ttlMs);
+
+    const session = await Session.create({
+      user: userId,
+      tokenId,
+      ipAddress: metadata.ipAddress,
+      userAgent: metadata.userAgent,
+      tokenIssuedAt,
+      lastSeenAt: tokenIssuedAt,
+      expiresAt
+    });
+
+    return session;
+  }
+
+  async function touchSession(tokenId) {
+    await Session.updateOne(
+      { tokenId, revokedAt: null, expiresAt: { $gt: new Date() } },
+      { $set: { lastSeenAt: new Date() } }
+    );
+  }
+
+  async function revokeSession(tokenId, reason = 'manual_logout') {
+    await Session.updateOne(
+      { tokenId },
+      { $set: { revokedAt: new Date(), revokedReason: reason } }
+    );
+  }
+
+  return { issueSession, touchSession, revokeSession };
+}
+
+function getBearerToken(req) {
+  const header = String(req.headers.authorization || '');
+  if (!header.startsWith('Bearer ')) {
+    return '';
+  }
+  return header.slice(7).trim();
+}
+
+function createAuthMiddleware(jwtSecret, sessionHelpers) {
+  return async function requireAuth(req, res, next) {
+    try {
+      const token = getBearerToken(req);
+      if (!token) {
+        return res.status(401).json({ message: 'Authorization token is required.' });
+      }
+
+      const payload = verifyResetToken(token, jwtSecret);
+      if (!payload?.tokenId || !payload?.userId) {
+        return res.status(401).json({ message: 'Invalid access token.' });
+      }
+
+      const session = await Session.findOne({
+        tokenId: payload.tokenId,
+        user: payload.userId,
+        revokedAt: null,
+        expiresAt: { $gt: new Date() }
+      });
+
+      if (!session) {
+        return res.status(401).json({ message: 'Session expired or revoked.' });
+      }
+
+      req.auth = { payload, session };
+      await sessionHelpers.touchSession(payload.tokenId);
+      next();
+    } catch (error) {
+      return res.status(401).json({ message: 'Invalid or expired access token.' });
+    }
+  };
+}
+
+function createAuthRouter({ mailer, smtpFrom, jwtSecret, jwtExpiresIn, resetTokenExpiresIn, sessionExpiresInDays }) {
   const router = express.Router();
+  const logAuditEvent = createAuditLogger();
+  const sessionHelpers = createSessionHelpers(sessionExpiresInDays);
+  const requireAuth = createAuthMiddleware(jwtSecret, sessionHelpers);
 
   const otpEndpointLimiter = rateLimit({
     windowMs: 15 * 60 * 1000,
@@ -105,6 +218,11 @@ function createAuthRouter({ mailer, smtpFrom, jwtSecret, jwtExpiresIn, resetToke
       }
 
       await mailer.sendOtpEmail(smtpFrom, normalizedEmail, otp);
+      await logAuditEvent('register_otp_sent', {
+        email: normalizedEmail,
+        details: { resend: Boolean(resend) },
+        req
+      });
 
       return res.status(200).json({
         message: 'OTP sent to email.',
@@ -151,13 +269,19 @@ function createAuthRouter({ mailer, smtpFrom, jwtSecret, jwtExpiresIn, resetToke
           return res.status(409).json({ message: 'Email is already registered.' });
         }
 
-        await User.create({
+        const createdUser = await User.create({
           username: pending.username,
           email: pending.email,
           passwordHash: pending.passwordHash
         });
 
         await PendingSignup.deleteOne({ _id: pending._id });
+
+        await logAuditEvent('register_success', {
+          email: normalizedEmail,
+          user: createdUser._id,
+          req
+        });
 
         return res.status(201).json({ message: 'Account created successfully.' });
       }
@@ -186,6 +310,10 @@ function createAuthRouter({ mailer, smtpFrom, jwtSecret, jwtExpiresIn, resetToke
         await otpRecord.save();
 
         const resetToken = createResetToken(normalizedEmail, jwtSecret, resetTokenExpiresIn);
+        await logAuditEvent('reset_otp_verified', {
+          email: normalizedEmail,
+          req
+        });
         return res.status(200).json({ message: 'OTP verified.', resetToken });
       }
 
@@ -207,19 +335,39 @@ function createAuthRouter({ mailer, smtpFrom, jwtSecret, jwtExpiresIn, resetToke
 
       const user = await User.findOne({ email: normalizedEmail });
       if (!user) {
+        await logAuditEvent('login_failed', {
+          email: normalizedEmail,
+          details: { reason: 'unknown_email' },
+          req
+        });
         return res.status(401).json({ message: 'Invalid email or password.' });
       }
 
       const validPassword = await compareSecret(password, user.passwordHash);
       if (!validPassword) {
+        await logAuditEvent('login_failed', {
+          email: normalizedEmail,
+          user: user._id,
+          details: { reason: 'invalid_password' },
+          req
+        });
         return res.status(401).json({ message: 'Invalid email or password.' });
       }
 
+      const tokenId = generateTokenId();
+
       const token = createAccessToken(
-        { userId: String(user._id), email: user.email },
+        { userId: String(user._id), email: user.email, tokenId },
         jwtSecret,
         jwtExpiresIn
       );
+
+      await sessionHelpers.issueSession({ userId: user._id, tokenId, req });
+      await logAuditEvent('login_success', {
+        email: normalizedEmail,
+        user: user._id,
+        req
+      });
 
       return res.status(200).json({
         message: 'Login successful.',
@@ -288,6 +436,11 @@ function createAuthRouter({ mailer, smtpFrom, jwtSecret, jwtExpiresIn, resetToke
       }
 
       await mailer.sendOtpEmail(smtpFrom, normalizedEmail, otp);
+      await logAuditEvent('password_reset_otp_sent', {
+        email: normalizedEmail,
+        user: user._id,
+        req
+      });
 
       return res.status(200).json({
         message: 'If this email exists, OTP has been sent.',
@@ -337,6 +490,11 @@ function createAuthRouter({ mailer, smtpFrom, jwtSecret, jwtExpiresIn, resetToke
       await user.save();
 
       await OtpCode.deleteMany({ email: normalizedEmail, purpose: 'reset_password' });
+      await logAuditEvent('password_reset_success', {
+        email: normalizedEmail,
+        user: user._id,
+        req
+      });
 
       return res.status(200).json({ message: 'Password reset successful.' });
     } catch (error) {
@@ -401,6 +559,66 @@ function createAuthRouter({ mailer, smtpFrom, jwtSecret, jwtExpiresIn, resetToke
     } catch (error) {
       console.error(error);
       return res.status(500).json({ message: 'Server error while querying Testmail.' });
+    }
+  });
+
+  router.get('/sessions', requireAuth, async (req, res) => {
+    try {
+      const sessions = await Session.find({
+        user: req.auth.payload.userId,
+        revokedAt: null,
+        expiresAt: { $gt: new Date() }
+      })
+        .sort({ lastSeenAt: -1 })
+        .select('ipAddress userAgent tokenIssuedAt lastSeenAt expiresAt createdAt');
+
+      return res.status(200).json({
+        sessions: sessions.map((session) => ({
+          id: String(session._id),
+          ipAddress: session.ipAddress,
+          userAgent: session.userAgent,
+          tokenIssuedAt: session.tokenIssuedAt,
+          lastSeenAt: session.lastSeenAt,
+          expiresAt: session.expiresAt,
+          createdAt: session.createdAt
+        }))
+      });
+    } catch (error) {
+      console.error(error);
+      return res.status(500).json({ message: 'Server error while loading sessions.' });
+    }
+  });
+
+  router.post('/logout', requireAuth, async (req, res) => {
+    try {
+      await sessionHelpers.revokeSession(req.auth.payload.tokenId, 'manual_logout');
+      await logAuditEvent('logout', {
+        email: req.auth.payload.email,
+        user: req.auth.payload.userId,
+        req
+      });
+      return res.status(200).json({ message: 'Logged out successfully.' });
+    } catch (error) {
+      console.error(error);
+      return res.status(500).json({ message: 'Server error while logging out.' });
+    }
+  });
+
+  router.post('/logout-all', requireAuth, async (req, res) => {
+    try {
+      await Session.updateMany(
+        { user: req.auth.payload.userId, revokedAt: null },
+        { $set: { revokedAt: new Date(), revokedReason: 'logout_all' } }
+      );
+      await logAuditEvent('logout_all', {
+        email: req.auth.payload.email,
+        user: req.auth.payload.userId,
+        req
+      });
+      return res.status(200).json({ message: 'All sessions were logged out.' });
+    } catch (error) {
+      console.error(error);
+      return res.status(500).json({ message: 'Server error while logging out sessions.' });
     }
   });
 
