@@ -1,8 +1,8 @@
 if (window.location.protocol === 'file:') {
   const currentFile = window.location.pathname.split(/[\\/]/).pop() || 'index.html';
   const targetUrl = currentFile === 'index.html'
-    ? 'http://localhost:5000/'
-    : `http://localhost:5000/${currentFile}`;
+    ? 'https://nexl.me/'
+    : `https://nexl.me/${currentFile}`;
   window.location.replace(targetUrl);
 }
 
@@ -25,7 +25,7 @@ function getApiBaseUrl() {
     window.location.hostname === 'localhost' ||
     window.location.hostname === '127.0.0.1'
   ) {
-    return 'http://localhost:5000';
+    return 'https://api.nexl.me';
   }
 
   if (window.location.hostname === 'nexl.me' || window.location.hostname === 'www.nexl.me') {
