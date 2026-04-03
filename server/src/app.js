@@ -3,7 +3,7 @@ const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
 const dotenv = require('dotenv');
-const { connectDatabase } = require('./config/db');
+const { connectDatabase, disconnectDatabase, getDatabaseStatus } = require('./config/db');
 const { createMailer, sendOtpEmail } = require('./config/mailer');
 const { createAuthRouter } = require('./routes/authRoutes');
 
@@ -85,7 +85,15 @@ async function startServer() {
   app.use(express.static(path.join(__dirname, '..', '..', 'client')));
 
   app.get('/health', (req, res) => {
-    res.status(200).json({ ok: true, timestamp: new Date().toISOString() });
+    const dbStatus = getDatabaseStatus();
+    const isHealthy = dbStatus === 'connected';
+
+    res.status(isHealthy ? 200 : 503).json({
+      ok: isHealthy,
+      dbStatus,
+      timestamp: new Date().toISOString(),
+      uptimeSeconds: Math.floor(process.uptime())
+    });
   });
 
   app.use((err, req, res, next) => {
@@ -93,9 +101,31 @@ async function startServer() {
     res.status(500).json({ message: 'Unexpected server error.' });
   });
 
-  app.listen(config.port, () => {
+  const server = app.listen(config.port, () => {
     console.log(`Server running on http://localhost:${config.port}`);
   });
+
+  const gracefulShutdown = (signal) => {
+    console.log(`${signal} received. Shutting down gracefully...`);
+    server.close(async () => {
+      try {
+        await disconnectDatabase();
+        console.log('Shutdown complete');
+        process.exit(0);
+      } catch (error) {
+        console.error(`Error during shutdown: ${error.message}`);
+        process.exit(1);
+      }
+    });
+
+    setTimeout(() => {
+      console.error('Forced shutdown after timeout');
+      process.exit(1);
+    }, 10000).unref();
+  };
+
+  process.on('SIGINT', () => gracefulShutdown('SIGINT'));
+  process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
 }
 
 startServer().catch((error) => {

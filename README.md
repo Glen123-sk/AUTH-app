@@ -78,3 +78,21 @@ Open:
 
 - `GET /profile` returns the current user and profile document
 - `PUT /profile` updates profile fields like display name, theme, bio, and contact details
+
+## Go Live With MongoDB Atlas
+
+1. Create a MongoDB Atlas cluster (M0 is fine to start).
+2. Create a dedicated database user with read/write permission.
+3. In Atlas Network Access, allow your server egress IP (or temporary `0.0.0.0/0` during setup).
+4. Copy `server/.env.production.example` to `server/.env` and fill all placeholders.
+5. Set `MONGO_URI` to your Atlas SRV string, including your app database name.
+6. Set a strong `JWT_SECRET` (at least 32 random characters).
+7. Set `CORS_ORIGIN` to your real frontend domains only.
+8. Start backend from `server/` with `npm start`.
+9. Validate health endpoint: `GET /health` should return `ok: true` and `dbStatus: connected`.
+
+Example production URI format:
+
+```env
+MONGO_URI=mongodb+srv://<db_user>:<db_password>@<cluster-host>/auth_smtp_app?retryWrites=true&w=majority&appName=auth-smtp-app
+```
