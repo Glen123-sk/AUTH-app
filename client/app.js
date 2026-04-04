@@ -6,10 +6,27 @@ function setMessage(id, text, type) {
   if (type) el.classList.add(type);
 }
 
+function getApiBaseFromQuery() {
+  const q = new URLSearchParams(window.location.search);
+  const apiBase = q.get('apiBase');
+  return apiBase ? apiBase.trim() : '';
+}
+
 function getApiBaseUrl() {
+  const fromQuery = getApiBaseFromQuery();
+  if (fromQuery) {
+    localStorage.setItem('API_BASE_URL', fromQuery.replace(/\/$/, ''));
+    return fromQuery.replace(/\/$/, '');
+  }
+
   const configuredBase = window.APP_CONFIG?.API_BASE_URL;
   if (configuredBase) {
     return configuredBase.replace(/\/$/, '');
+  }
+
+  const savedBase = localStorage.getItem('API_BASE_URL');
+  if (savedBase) {
+    return savedBase.replace(/\/$/, '');
   }
 
   if (
@@ -76,6 +93,9 @@ async function apiPost(url, payload) {
     const detail =
       data.message ||
       (res.status === 404 ? 'API endpoint not found. Check backend deployment.' : '') ||
+      (res.status === 405
+        ? 'API is not available on this domain. Deploy backend API and set APP_CONFIG.API_BASE_URL to that server URL.'
+        : '') ||
       textFallback ||
       `HTTP ${res.status}`;
 
