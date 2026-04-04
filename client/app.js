@@ -251,7 +251,6 @@ function setupResetPassword() {
 function setupSuccess() {
   const q = params();
   const type = q.get('type');
-  const source = q.get('source');
   const heading = document.getElementById('success-title');
   const detail = document.getElementById('success-detail');
 
@@ -260,9 +259,6 @@ function setupSuccess() {
   if (type === 'signup') {
     heading.textContent = 'Signup completed';
     detail.textContent = 'Your email has been verified and your account is now active.';
-  } else if (type === 'login' && source === 'github') {
-    heading.textContent = 'GitHub sign-in complete';
-    detail.textContent = 'Your GitHub account is authenticated and ready to use.';
   } else if (type === 'login') {
     heading.textContent = 'Successfully logged in';
     detail.textContent = 'Welcome back. Your login was validated securely.';
