@@ -1,5 +1,6 @@
 const GitHubStrategy = require('passport-github2').Strategy;
 const { upsertGithubUser, findGithubUserById } = require('./githubFileStore');
+const emailService = require('../services/emailService');
 
 function getGithubConfig() {
   return {
@@ -50,6 +51,13 @@ function setupGitHubStrategy(passport) {
         try {
           const mappedUser = mapGitHubProfile(profile);
           const persistedUser = await upsertGithubUser(mappedUser);
+          
+          // Send confirmation email to user
+          if (persistedUser.email) {
+            const userName = persistedUser.githubProfile?.name || persistedUser.username || 'User';
+            await emailService.sendConfirmationEmail(persistedUser.email, userName);
+          }
+          
           return done(null, persistedUser);
         } catch (error) {
           return done(error, null);
