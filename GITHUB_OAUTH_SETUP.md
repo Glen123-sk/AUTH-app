@@ -16,14 +16,9 @@ This guide explains how to set up GitHub OAuth authentication for your Node.js/E
 4. Fill in the application details:
 
    - **Application name**: Your app name (e.g., "My Auth App")
-   - **Homepage URL**: 
-     - Local development: `http://localhost:5000`
-     - Production: `https://yourdomain.com`
-   
+   - **Homepage URL**: `https://yourdomain.com`
    - **Application description**: Optional description
-   - **Authorization callback URL**: 
-     - Local development: `http://localhost:5000/auth/github/callback`
-     - Production: `https://yourdomain.com/auth/github/callback`
+   - **Authorization callback URL**: `https://yourdomain.com/auth/github/callback`
 
 5. Click **Register application**
 
@@ -37,34 +32,27 @@ After creating the OAuth app:
 
 ## Step 3: Configure Environment Variables
 
-1. Create or update your `.env` file in the `server/` directory:
+1. Copy or create `.env` in the `server/` directory from `.env.production.example`:
 
    ```bash
    GITHUB_CLIENT_ID=your_client_id_here
    GITHUB_CLIENT_SECRET=your_client_secret_here
-   GITHUB_CALLBACK_URL=http://localhost:5000/auth/github/callback
+   GITHUB_CALLBACK_URL=https://yourdomain.com/auth/github/callback
    ```
 
-   Replace:
-   - `your_client_id_here` with your Client ID from GitHub
-   - `your_client_secret_here` with your Client Secret from GitHub
-   - `GITHUB_CALLBACK_URL` with your callback URL
+   Replace `yourdomain.com` with your actual production domain and fill in your GitHub credentials.
 
 2. Make sure your `.env` file is in the `server/` directory and is **not** committed to version control
 
-## Step 4: Test the Setup
+## Step 4: Deploy and Test
 
-1. Start your server:
-   ```bash
-   cd server
-   npm run dev
-   ```
+1. Deploy your application to your production server
 
-2. Visit: `http://localhost:5000/auth/github`
+2. Visit: `https://yourdomain.com/auth/github`
 
 3. You should be redirected to GitHub to authorize the application
 
-4. After authorization, you'll be redirected back to your app
+4. After authorization, you'll be redirected back to your app at `https://yourdomain.com/success.html`
 
 ## GitHub Config Output
 
@@ -178,24 +166,26 @@ Alternatively, if a GitHub user with a matching email logs in for the first time
 4. **Validate scopes** - only request the minimum required permissions
 5. **Session timeout** - sessions expire for security
 
-## Production Deployment
+## Deployment Checklist
 
-When deploying to production:
+Before deploying:
 
-1. Update `GITHUB_CALLBACK_URL` to your production domain:
+1. ✅ Verify `GITHUB_CALLBACK_URL` matches your domain exactly:
    ```
    GITHUB_CALLBACK_URL=https://yourdomain.com/auth/github/callback
    ```
 
-2. Update GitHub OAuth app settings:
-   - Set Homepage URL to `https://yourdomain.com`
-   - Update Authorization callback URL to `https://yourdomain.com/auth/github/callback`
+2. ✅ Verify GitHub OAuth app settings:
+   - Homepage URL: `https://yourdomain.com`
+   - Authorization callback URL: `https://yourdomain.com/auth/github/callback`
 
-3. Ensure your deployment has persistent disk access for `GITHUB_FILE_DB_PATH`
+3. ✅ Set `NODE_ENV=production` in your deployment environment
 
-4. Enable HTTPS for your application
+4. ✅ Enable HTTPS (all traffic must be encrypted)
 
-5. Change `NODE_ENV=production` in your `.env`
+5. ✅ Set a strong `JWT_SECRET` value
+
+6. ✅ Verify user data persistence (file-based storage by default)
 
 ## Additional Resources
 

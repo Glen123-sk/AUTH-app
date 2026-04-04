@@ -11,7 +11,7 @@ This project is a GitHub OAuth-only authentication app.
 - File datastore: `server/src/config/githubFileStore.js`
 
 ## How The App Is Wired
-- The browser opens `index.html`, which redirects to `http://localhost:5000/`.
+- The browser opens `index.html`, which redirects to your production domain.
 - Express in `server/src/app.js` serves static frontend files from `client/`.
 - GitHub OAuth starts at `GET /auth/github`.
 - Callback is handled by `GET /auth/github/callback`.
@@ -24,7 +24,7 @@ This project is a GitHub OAuth-only authentication app.
 
 ## Important Assumptions
 - App runs from backend, not Live Server.
-- Open site at `http://localhost:5000/`.
+- Open site at your production domain.
 - GitHub OAuth credentials must be configured in `server/.env`.
 
 ## Required Environment Variables
@@ -38,4 +38,4 @@ From `server/`:
 - `npm install`
 - `npm start`
 
-Then open `http://localhost:5000/`.
+Then visit your production domain.
