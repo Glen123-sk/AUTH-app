@@ -37,10 +37,31 @@ async function apiPost(url, payload) {
     throw new Error(`Unable to reach the authentication API at ${getApiBaseUrl()}. ${error.message}`);
   }
 
-  const data = await res.json().catch(() => ({}));
-  if (!res.ok) {
-    throw new Error(data.message || 'Request failed');
+  const contentType = res.headers.get('content-type') || '';
+  const raw = await res.text();
+  let data = {};
+  if (contentType.includes('application/json')) {
+    try {
+      data = JSON.parse(raw || '{}');
+    } catch {
+      data = {};
+    }
   }
+
+  if (!res.ok) {
+    const textFallback = raw && !contentType.includes('application/json')
+      ? raw.slice(0, 140).replace(/\s+/g, ' ')
+      : '';
+
+    const detail =
+      data.message ||
+      (res.status === 404 ? 'API endpoint not found. Check backend deployment.' : '') ||
+      textFallback ||
+      `HTTP ${res.status}`;
+
+    throw new Error(detail);
+  }
+
   return data;
 }
 
