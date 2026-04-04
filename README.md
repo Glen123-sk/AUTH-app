@@ -16,37 +16,22 @@ This project is now a GitHub OAuth-only authentication app.
 
 The legacy email/password + OTP endpoints (`/register`, `/login`, etc.) return `410` because they were removed.
 
-## Setup
+## Deployment
 
-1. Copy `server/.env.example` to `server/.env`
-2. Fill GitHub OAuth values
+For production deployment to your domain:
 
-Required environment variables:
+1. Copy `server/.env.production.example` to your hosting platform's environment variables
+2. Update the values:
+   - `GITHUB_CALLBACK_URL=https://your-domain.com/auth/github/callback`
+   - `CORS_ORIGIN=https://your-domain.com,https://www.your-domain.com`
+   - `GITHUB_CLIENT_ID` and `GITHUB_CLIENT_SECRET` from your GitHub OAuth app
+   - `JWT_SECRET` with a strong random value
 
-```env
-PORT=5000
-NODE_ENV=development
-TRUST_PROXY=true
-USE_GITHUB_AUTH_ONLY=true
-JWT_SECRET=replace_with_long_random_secret
-CORS_ORIGIN=http://localhost:5000,http://127.0.0.1:5000
+3. Ensure your GitHub OAuth app settings match:
+   - Homepage URL: `https://your-domain.com`
+   - Authorization callback URL: `https://your-domain.com/auth/github/callback` (exact match)
 
-GITHUB_CLIENT_ID=your_github_client_id
-GITHUB_CLIENT_SECRET=your_github_client_secret
-GITHUB_CALLBACK_URL=http://localhost:5000/auth/github/callback
-GITHUB_FILE_DB_PATH=
-```
-
-## Run
-
-From `server/`:
-
-```powershell
-npm install
-npm run dev
-```
-
-Open `http://localhost:5000/`.
+4. Deploy and verify with `GET https://your-domain.com/health`
 
 ## Live Deployment Checklist
 
