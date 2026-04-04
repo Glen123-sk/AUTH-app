@@ -134,6 +134,15 @@ async function startServer() {
         sessionExpiresInDays: config.sessionExpiresInDays
       })
     );
+  } else {
+    const githubOnlyMessage = 'Email/password signup is disabled. Use GitHub sign-in instead.';
+
+    app.post(['/register', '/verify-otp', '/forgot-password', '/reset-password', '/login'], (req, res) => {
+      return res.status(403).json({
+        message: githubOnlyMessage,
+        authMode: 'github-only'
+      });
+    });
   }
 
   // GitHub OAuth routes
