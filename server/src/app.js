@@ -91,6 +91,9 @@ function validateConfig() {
 async function startServer() {
   validateConfig();
   const mailer = createMailer(config);
+  const githubEnabled = Boolean(
+    process.env.GITHUB_CLIENT_ID && process.env.GITHUB_CLIENT_SECRET && config.githubCallbackUrl
+  );
 
   const app = express();
   app.set('trust proxy', config.trustProxy ? 1 : 0);
@@ -112,8 +115,10 @@ async function startServer() {
     })
   );
 
-  setupGitHubStrategy(passport);
-  setupSerialization(passport);
+  if (githubEnabled) {
+    setupGitHubStrategy(passport);
+    setupSerialization(passport);
+  }
 
   app.use(passport.initialize());
   app.use(passport.session());
@@ -431,32 +436,34 @@ async function startServer() {
     }
   });
 
-  app.get('/auth/github', passport.authenticate('github', { scope: ['user:email', 'user'] }));
+  if (githubEnabled) {
+    app.get('/auth/github', passport.authenticate('github', { scope: ['user:email', 'user'] }));
 
-  app.get(
-    '/auth/github/callback',
-    passport.authenticate('github', { failureRedirect: '/login.html?error=github_auth_failed' }),
-    (req, res) => {
-      res.redirect('/success.html?type=login&source=github');
-    }
-  );
-
-  app.get('/auth/github/user', (req, res) => {
-    if (!req.isAuthenticated()) {
-      return res.status(401).json({ message: 'Not authenticated' });
-    }
-
-    return res.status(200).json({
-      user: {
-        id: String(req.user.id || ''),
-        username: req.user.username,
-        email: req.user.email,
-        githubId: req.user.githubId,
-        githubProfile: req.user.githubProfile,
-        authMethod: req.user.authMethod
+    app.get(
+      '/auth/github/callback',
+      passport.authenticate('github', { failureRedirect: '/login.html?error=github_auth_failed' }),
+      (req, res) => {
+        res.redirect('/success.html?type=login&source=github');
       }
+    );
+
+    app.get('/auth/github/user', (req, res) => {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: 'Not authenticated' });
+      }
+
+      return res.status(200).json({
+        user: {
+          id: String(req.user.id || ''),
+          username: req.user.username,
+          email: req.user.email,
+          githubId: req.user.githubId,
+          githubProfile: req.user.githubProfile,
+          authMethod: req.user.authMethod
+        }
+      });
     });
-  });
+  }
 
   app.get('/confirm-email', async (req, res) => {
     const token = req.query.token;
@@ -485,6 +492,7 @@ async function startServer() {
     res.status(200).json({
       ok: true,
       storage: String(process.env.GITHUB_DB_MODE || 'file').toLowerCase() === 'api' ? 'github-api' : 'file',
+      authMode: githubEnabled ? 'email+github' : 'email-only',
       timestamp: new Date().toISOString(),
       uptimeSeconds: Math.floor(process.uptime())
     });
