@@ -7,3 +7,4 @@ target/
 .settings/
 server/node_modules/
 server/.env
+server/data/*.json
