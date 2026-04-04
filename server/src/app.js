@@ -6,6 +6,7 @@ const cors = require('cors');
 const helmet = require('helmet');
 const dotenv = require('dotenv');
 const { setupGitHubStrategy, setupSerialization, validateGitHubConfig } = require('./config/github');
+const emailService = require('./services/emailService');
 
 dotenv.config();
 
@@ -61,6 +62,7 @@ async function startServer() {
   app.set('trust proxy', config.trustProxy ? 1 : 0);
 
   validateGitHubConfig();
+  emailService.initialize();
 
   app.use(
     session({
@@ -123,6 +125,27 @@ async function startServer() {
         authMethod: req.user.authMethod
       }
     });
+  });
+
+  app.get('/confirm-email', async (req, res) => {
+    const token = req.query.token;
+    if (!token) {
+      return res.status(400).json({ message: 'Confirmation token is required' });
+    }
+
+    const email = emailService.verifyConfirmationToken(token);
+    if (!email) {
+      return res.status(400).json({ message: 'Invalid or expired confirmation token' });
+    }
+
+    try {
+      // Send welcome email after confirmation
+      const userName = req.query.name || 'User';
+      await emailService.sendWelcomeEmail(email, userName);
+      return res.status(200).json({ message: 'Email confirmed successfully. Welcome email sent.' });
+    } catch (error) {
+      return res.status(500).json({ message: 'Failed to process confirmation' });
+    }
   });
 
   app.use(express.static(path.join(__dirname, '..', '..', 'client')));
