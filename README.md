@@ -50,8 +50,10 @@ cmd /c npm run dev
 
 Open:
 
-- `http://localhost:5000/` for landing page
+- `http://localhost:5000/` for the landing page and frontend
 - `http://localhost:5000/health` for API health check
+
+Run the backend from `server/`; the app is served from Express, not Live Server.
 
 ## Security implemented
 
@@ -90,6 +92,8 @@ Open:
 7. Set `CORS_ORIGIN` to your real frontend domains only.
 8. Start backend from `server/` with `npm start`.
 9. Validate health endpoint: `GET /health` should return `ok: true` and `dbStatus: connected`.
+
+If MongoDB returns `bad auth` or `authentication failed`, double-check the database user, URL-encode any special characters in the password, and add `authSource` only if your MongoDB user was created in a different database than the one in the URI path.
 
 Example production URI format:
 
