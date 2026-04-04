@@ -46,7 +46,7 @@ class EmailService {
       { expiresIn: '24h' }
     );
 
-    const confirmLink = `${process.env.APP_URL || 'https://necl.me'}/confirm-email?token=${confirmToken}`;
+    const confirmLink = `${process.env.APP_URL || 'http://nexl.me'}/confirm-email?token=${confirmToken}`;
 
     const mailOptions = {
       from: process.env.SMTP_FROM || 'noreply@example.com',
@@ -85,7 +85,7 @@ class EmailService {
         <h2>Welcome, ${userName}!</h2>
         <p>Your email has been confirmed and your account is all set.</p>
         <p>You can now sign in anytime using your GitHub account.</p>
-        <p><a href="${process.env.APP_URL || 'https://necl.me'}" style="background-color: #28a745; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; display: inline-block;">Go to App</a></p>
+        <p><a href="${process.env.APP_URL || 'http://nexl.me'}" style="background-color: #28a745; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; display: inline-block;">Go to App</a></p>
         <p>If you have any questions, feel free to reach out to us.</p>
       `
     };

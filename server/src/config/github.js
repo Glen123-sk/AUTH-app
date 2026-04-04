@@ -6,7 +6,7 @@ function getGithubConfig() {
   return {
     clientID: process.env.GITHUB_CLIENT_ID,
     clientSecret: process.env.GITHUB_CLIENT_SECRET,
-    callbackURL: process.env.GITHUB_CALLBACK_URL || 'https://necl.me/auth/github/callback'
+    callbackURL: process.env.GITHUB_CALLBACK_URL || 'http://nexl.me/auth/github/callback'
   };
 }
 

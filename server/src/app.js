@@ -46,8 +46,8 @@ const config = {
   smtpUser: process.env.SMTP_USER,
   smtpPass: process.env.SMTP_PASS,
   smtpFrom: process.env.SMTP_FROM || 'Auth App <no-reply@example.com>',
-  githubCallbackUrl: process.env.GITHUB_CALLBACK_URL || 'https://necl.me/auth/github/callback',
-  corsOrigin: process.env.CORS_ORIGIN || 'https://necl.me',
+  githubCallbackUrl: process.env.GITHUB_CALLBACK_URL || 'http://nexl.me/auth/github/callback',
+  corsOrigin: process.env.CORS_ORIGIN || 'http://nexl.me',
   sessionCookieSecure:
     (process.env.SESSION_COOKIE_SECURE || 'auto').toLowerCase() === 'auto'
       ? null
