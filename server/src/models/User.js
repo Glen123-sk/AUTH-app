@@ -18,7 +18,29 @@ const userSchema = new mongoose.Schema(
     },
     passwordHash: {
       type: String,
-      required: true
+      default: null
+    },
+    // GitHub OAuth fields
+    githubId: {
+      type: String,
+      sparse: true
+    },
+    githubProfile: {
+      type: {
+        login: String,
+        id: Number,
+        avatar_url: String,
+        profile_url: String,
+        name: String,
+        bio: String
+      },
+      default: null
+    },
+    // Track authentication method
+    authMethod: {
+      type: String,
+      enum: ['local', 'github'],
+      default: 'local'
     }
   },
   { timestamps: true }

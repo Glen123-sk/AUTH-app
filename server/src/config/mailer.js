@@ -76,9 +76,17 @@ function createMailer(config) {
     host: config.smtpHost,
     port: config.smtpPort,
     secure: config.smtpSecure,
+    requireTLS: config.smtpRequireTls,
+    connectionTimeout: config.smtpConnectionTimeoutMs,
+    greetingTimeout: config.smtpGreetingTimeoutMs,
+    socketTimeout: config.smtpSocketTimeoutMs,
     auth: {
       user: config.smtpUser,
       pass: config.smtpPass
+    },
+    tls: {
+      minVersion: 'TLSv1.2',
+      rejectUnauthorized: config.smtpRejectUnauthorized
     }
   });
 
