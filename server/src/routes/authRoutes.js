@@ -246,7 +246,10 @@ function createAuthRouter({ mailer, smtpFrom, jwtSecret, jwtExpiresIn, resetToke
         await pending.save();
       }
 
-      const delivery = await mailer.sendOtpEmail(smtpFrom, normalizedEmail, otp);
+      const delivery = await mailer.sendOtpEmail(smtpFrom, normalizedEmail, otp, {
+        purpose: 'signup',
+        appName: 'Nexl'
+      });
       console.log(
         `OTP email dispatch result (signup): to=${normalizedEmail}, accepted=${delivery.accepted.length}, rejected=${delivery.rejected.length}, messageId=${delivery.messageId}`
       );
@@ -485,7 +488,10 @@ function createAuthRouter({ mailer, smtpFrom, jwtSecret, jwtExpiresIn, resetToke
         await otpRecord.save();
       }
 
-      const delivery = await mailer.sendOtpEmail(smtpFrom, normalizedEmail, otp);
+      const delivery = await mailer.sendOtpEmail(smtpFrom, normalizedEmail, otp, {
+        purpose: 'reset_password',
+        appName: 'Nexl'
+      });
       console.log(
         `OTP email dispatch result (reset): to=${normalizedEmail}, accepted=${delivery.accepted.length}, rejected=${delivery.rejected.length}, messageId=${delivery.messageId}`
       );

@@ -67,7 +67,7 @@ async function startServer() {
   app.use(express.json({ limit: '10kb' }));
 
   const mailer = {
-    sendOtpEmail: (from, to, otp) => sendOtpEmail(transporter, from, to, otp)
+    sendOtpEmail: (from, to, otp, options) => sendOtpEmail(transporter, from, to, otp, options)
   };
 
   app.use(
