@@ -281,7 +281,7 @@ function send_mail_smtp(string $to, string $subject, string $text): void
         throw new RuntimeException('SMTP greeting failed: ' . trim($greeting));
     }
 
-    smtp_cmd($fp, 'EHLO necl.me');
+    smtp_cmd($fp, 'EHLO nexl.me');
 
     if (!$secure) {
         smtp_cmd($fp, 'STARTTLS', ['2']);
@@ -289,7 +289,7 @@ function send_mail_smtp(string $to, string $subject, string $text): void
             fclose($fp);
             throw new RuntimeException('Failed to enable TLS for SMTP');
         }
-        smtp_cmd($fp, 'EHLO necl.me');
+        smtp_cmd($fp, 'EHLO nexl.me');
     }
 
     smtp_cmd($fp, 'AUTH LOGIN', ['3']);
@@ -321,7 +321,7 @@ function send_mail_smtp(string $to, string $subject, string $text): void
 
 function set_cors(): void
 {
-    $allowed = explode(',', envv('CORS_ORIGIN', 'https://necl.me') ?? 'https://necl.me');
+    $allowed = explode(',', envv('CORS_ORIGIN', 'http://nexl.me') ?? 'http://nexl.me');
     $allowed = array_values(array_filter(array_map('trim', $allowed)));
 
     $origin = $_SERVER['HTTP_ORIGIN'] ?? '';
