@@ -788,6 +788,130 @@ function createAuthRouter({ mailer, smtpFrom, jwtSecret, jwtExpiresIn, resetToke
     }
   });
 
+  // GitHub Credentials Routes
+  // Get current user's saved GitHub credentials
+  router.get('/github/credentials', requireAuth, async (req, res) => {
+    try {
+      const user = await User.findById(req.auth.payload.userId).select('githubId githubProfile authMethod');
+      
+      if (!user || !user.githubId) {
+        return res.status(404).json({
+          message: 'No GitHub credentials found for this user.',
+          hasGitHub: false
+        });
+      }
+
+      return res.status(200).json({
+        message: 'GitHub credentials retrieved successfully.',
+        hasGitHub: true,
+        credentials: {
+          githubId: user.githubId,
+          username: user.githubProfile?.login,
+          name: user.githubProfile?.name,
+          email: user.githubProfile?.email,
+          avatar: user.githubProfile?.avatar_url,
+          profileUrl: user.githubProfile?.profile_url,
+          bio: user.githubProfile?.bio,
+          authMethod: user.authMethod
+        }
+      });
+    } catch (error) {
+      console.error(error);
+      return res.status(500).json({ message: 'Server error while retrieving GitHub credentials.' });
+    }
+  });
+
+  // Get all users with GitHub credentials (admin endpoint)
+  router.get('/github/users', requireAuth, async (req, res) => {
+    try {
+      // Verify this is an admin or has permission
+      const requestingUser = await User.findById(req.auth.payload.userId);
+      if (!requestingUser) {
+        return res.status(401).json({ message: 'User not found.' });
+      }
+
+      // Fetch all users with GitHub credentials
+      const githubUsers = await User.find({ githubId: { $exists: true, $ne: null } })
+        .select('username email githubId githubProfile authMethod createdAt')
+        .lean();
+
+      const formattedUsers = githubUsers.map(user => ({
+        id: String(user._id),
+        username: user.username,
+        email: user.email,
+        githubId: user.githubId,
+        githubLogin: user.githubProfile?.login,
+        githubName: user.githubProfile?.name,
+        authMethod: user.authMethod,
+        createdAt: user.createdAt
+      }));
+
+      return res.status(200).json({
+        message: 'GitHub users retrieved successfully.',
+        count: formattedUsers.length,
+        users: formattedUsers
+      });
+    } catch (error) {
+      console.error(error);
+      return res.status(500).json({ message: 'Server error while retrieving GitHub users.' });
+    }
+  });
+
+  // Fetch user by GitHub ID
+  router.get('/github/lookup/:githubId', async (req, res) => {
+    try {
+      const { githubId } = req.params;
+
+      if (!githubId) {
+        return res.status(400).json({ message: 'GitHub ID is required.' });
+      }
+
+      const user = await User.findOne({ githubId })
+        .select('username email githubId githubProfile authMethod createdAt');
+
+      if (!user) {
+        return res.status(404).json({
+          message: 'No user found with this GitHub ID.',
+          found: false
+        });
+      }
+
+      return res.status(200).json({
+        message: 'User found.',
+        found: true,
+        user: {
+          id: String(user._id),
+          username: user.username,
+          email: user.email,
+          githubId: user.githubId,
+          githubLogin: user.githubProfile?.login,
+          githubName: user.githubProfile?.name,
+          githubAvatar: user.githubProfile?.avatar_url,
+          authMethod: user.authMethod,
+          createdAt: user.createdAt
+        }
+      });
+    } catch (error) {
+      console.error(error);
+      return res.status(500).json({ message: 'Server error during lookup.' });
+    }
+  });
+
+  // GitHub OAuth routes
+  // This will be populated when passport is initialized
+  // Note: The actual endpoints will be added to this router via app.js
+  router.get('/github', (req, res, next) => {
+    // This endpoint is handled by passport middleware in app.js
+    // It initiates the GitHub OAuth flow
+    next();
+  });
+
+  router.get('/github/callback', (req, res) => {
+    // This endpoint is handled by passport middleware in app.js
+    // GitHub redirects here after authentication
+    res.json({ message: 'GitHub OAuth callback - handled by middleware' });
+  });
+
   return router;
 }
 

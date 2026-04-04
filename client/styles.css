@@ -628,6 +628,35 @@ body.poster-page .message {
   text-align: center;
 }
 
+body.poster-page .oauth-divider {
+  margin: calc(10px * var(--scale-spacing)) 0 calc(8px * var(--scale-spacing));
+  text-align: center;
+  font-size: calc(0.8rem * var(--scale-smallText) + 0.25rem);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: #5a5955;
+}
+
+body.poster-page .oauth-btn {
+  display: block;
+  width: 100%;
+  text-align: center;
+  padding: calc(10px * var(--scale-primaryButton)) calc(14px * var(--scale-primaryButton));
+  border: 2px solid var(--edge);
+  background: transparent;
+  color: var(--ink);
+  text-decoration: none;
+  text-transform: uppercase;
+  font-weight: 700;
+  font-family: "Georgia", serif;
+  margin-bottom: calc(6px * var(--scale-spacing));
+}
+
+body.poster-page .oauth-btn:hover {
+  background: #ece9dc;
+  text-decoration: none;
+}
+
 body.poster-page .message.error {
   color: var(--danger);
 }
