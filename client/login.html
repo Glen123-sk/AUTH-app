@@ -6,10 +6,10 @@
   <title>Auth App | Login</title>
   <link rel="stylesheet" href="styles.css" />
 </head>
-<body data-page="login">
+<body data-page="login" class="poster-page">
   <main class="container">
     <section class="card">
-      <h1>Welcome back</h1>
+      <h1>Welcome Back</h1>
       <p>Log in using your registered email and password.</p>
 
       <form id="login-form">
@@ -21,16 +21,19 @@
           <label for="password">Password</label>
           <input id="password" name="password" type="password" required />
         </div>
-        <button class="btn-primary" type="submit">Login</button>
+        <button class="btn solid" type="submit">Login</button>
       </form>
 
       <div id="login-message" class="message"></div>
       <div class="link-row">
         <a href="forgot-password.html">Forgot password?</a>
         <a href="signup.html">Sign up</a>
+        <a href="index.html">Home</a>
       </div>
     </section>
   </main>
+  <script src="colors.js"></script>
+  <script src="scale.js"></script>
   <script src="app.js"></script>
 </body>
 </html>
