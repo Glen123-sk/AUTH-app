@@ -32,16 +32,44 @@ function getApiBaseUrl() {
   return window.location.origin;
 }
 
+function normalizeBase(base) {
+  return String(base || '').trim().replace(/\/$/, '');
+}
+
 function getApiBaseCandidates() {
-  const primary = getApiBaseUrl();
+  const primary = normalizeBase(getApiBaseUrl());
+  const origin = normalizeBase(window.location.origin);
   const candidates = [primary];
 
   // Common production setup: frontend on root, backend behind /api
   if (!/\/api$/i.test(primary)) {
     candidates.push(`${primary}/api`);
+  } else {
+    // If user saved .../api as base, keep a root fallback too.
+    candidates.push(primary.replace(/\/api$/i, ''));
   }
 
-  return Array.from(new Set(candidates));
+  // Always include current origin variants as a fallback.
+  if (origin && !candidates.includes(origin)) {
+    candidates.push(origin);
+  }
+  if (origin && !candidates.includes(`${origin}/api`)) {
+    candidates.push(`${origin}/api`);
+  }
+
+  return Array.from(new Set(candidates.filter(Boolean)));
+}
+
+function buildApiUrl(base, path) {
+  if (!path.startsWith('/')) {
+    return `${base}/${path}`;
+  }
+
+  if (/\/api$/i.test(base)) {
+    return `${base}${path}`;
+  }
+
+  return `${base}${path}`;
 }
 
 async function apiPost(url, payload) {
@@ -49,7 +77,7 @@ async function apiPost(url, payload) {
   let lastError = null;
 
   for (const base of bases) {
-    const apiUrl = url.startsWith('http') ? url : new URL(url, base).toString();
+    const apiUrl = url.startsWith('http') ? url : buildApiUrl(base, url);
 
     let res;
     try {
