@@ -3,26 +3,20 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Auth App | Verify OTP</title>
+  <title>Auth App | Sign In</title>
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body data-page="otp" class="poster-page">
   <main class="container">
     <section class="card">
-      <h1>Verify Code</h1>
-      <p>Enter the 6-digit code sent to <strong id="otp-email"></strong>.</p>
+      <h1>Sign In</h1>
+      <p>Use your GitHub account to sign in.</p>
 
-      <form id="otp-form">
-        <div>
-          <label for="otp">One-time code</label>
-          <input id="otp" name="otp" class="otp-input" maxlength="6" required />
-        </div>
-        <button class="btn solid" type="submit">Verify</button>
-      </form>
+      <a class="oauth-btn github" href="/auth/github">Continue with GitHub</a>
 
       <div id="otp-message" class="message"></div>
       <div class="link-row">
-        <button id="resend-btn" type="button" class="btn line">Resend Code</button>
+        <a href="login.html">Back to login</a>
         <a href="index.html">Home</a>
       </div>
     </section>
