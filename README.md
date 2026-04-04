@@ -100,3 +100,20 @@ Example production URI format:
 ```env
 MONGO_URI=mongodb+srv://<db_user>:<db_password>@<cluster-host>/auth_smtp_app?retryWrites=true&w=majority&appName=auth-smtp-app
 ```
+
+## Live Troubleshooting (GitHub OAuth + SMTP)
+
+If live login is not working, verify these first:
+
+1. `GITHUB_CALLBACK_URL` in server env must exactly match the callback URL configured in your GitHub OAuth app.
+2. For live HTTPS deployment, callback should be `https://your-domain.com/auth/github/callback`.
+3. `USE_GITHUB_AUTH_ONLY=true` requires `GITHUB_CLIENT_ID` and `GITHUB_CLIENT_SECRET` to be set.
+4. If using OTP/email routes, set `USE_GITHUB_AUTH_ONLY=false` and configure MongoDB + SMTP.
+5. Keep `TRUST_PROXY=true` in production behind Render/Railway/Nginx/Cloudflare.
+
+Quick checks:
+
+- `GET /health` should return `ok: true`.
+- `GET /auth/github` should return `302` redirect to GitHub.
+- If OAuth returns to login with error, callback URL mismatch is most likely.
+- If OTP mail is not delivered, check SMTP provider logs and sender verification for `SMTP_FROM`.
