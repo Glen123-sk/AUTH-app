@@ -1,20 +1,23 @@
 # GitHub OAuth Authentication App
 
-This project is now a GitHub OAuth-only authentication app.
+This project supports email/password authentication with SMTP OTP verification, and optional GitHub OAuth sign-in.
 
 - Frontend pages are in `client/`
 - Backend server is in `server/`
-- User records are persisted in a local JSON file store (`server/data/github-users.json`)
+- User records can be persisted either in a local JSON file or directly in your GitHub repository via GitHub API
 - No database driver is required
 
 ## Main Endpoints
 
-- `GET /auth/github` starts GitHub login
-- `GET /auth/github/callback` OAuth callback
-- `GET /auth/github/user` returns the authenticated user session
+- `POST /register` starts email signup and sends OTP
+- `POST /verify-otp` verifies OTP for signup or password reset
+- `POST /login` signs in email users
+- `POST /forgot-password` sends reset OTP
+- `POST /reset-password` resets password with verified reset token
+- `GET /auth/github` starts GitHub login (optional)
+- `GET /auth/github/callback` OAuth callback (optional)
+- `GET /auth/github/user` returns the authenticated GitHub session
 - `GET /health` service health
-
-The legacy email/password + OTP endpoints (`/register`, `/login`, etc.) return `410` because they were removed.
 
 ## Deployment
 
@@ -26,6 +29,9 @@ For production deployment to your domain:
    - `CORS_ORIGIN=https://your-domain.com,https://www.your-domain.com`
    - `GITHUB_CLIENT_ID` and `GITHUB_CLIENT_SECRET` from your GitHub OAuth app
    - `JWT_SECRET` with a strong random value
+   - `GITHUB_DB_MODE=api`
+   - `GITHUB_DB_OWNER`, `GITHUB_DB_REPO`, `GITHUB_DB_BRANCH`, `GITHUB_DB_FILE_PATH`
+   - `GITHUB_DB_TOKEN` (GitHub PAT with repo contents write permission)
 
 3. Ensure your GitHub OAuth app settings match:
    - Homepage URL: `https://your-domain.com`
@@ -45,4 +51,5 @@ For production deployment to your domain:
 Quick checks:
 
 - `GET /health` returns `ok: true`
+- `GET /health` returns `storage: "github-api"` when GitHub API database mode is enabled
 - `GET /auth/github` returns redirect (`302`) to GitHub

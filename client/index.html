@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Auth App | Secure GitHub Authentication</title>
+  <title>Auth App | Secure Landing</title>
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body data-page="landing">
@@ -11,13 +11,15 @@
     <section class="sheet">
       <div class="left">
         <div class="actions">
-          <a href="/auth/github" class="btn solid">Sign in with GitHub</a>
+          <button id="go-login" class="btn solid">Login</button>
+          <button id="go-signup" class="btn line">Sign Up</button>
         </div>
         <span class="stamp">Secured</span>
       </div>
       <div class="right">
         <div class="rule"></div>
-        <p>Simple, secure authentication powered by GitHub OAuth. No passwords to remember.</p>
+        <p>Real-time OTP delivery with encrypted sessions and robust password recovery flows.</p>
+        <a href="forgot-password.html" id="go-forgot" class="lab-link">Forgot password?</a>
         <div class="rule"></div>
       </div>
     </section>

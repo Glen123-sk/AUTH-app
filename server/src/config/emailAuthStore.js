@@ -1,12 +1,18 @@
 const fs = require('fs/promises');
 const path = require('path');
 
-function getStorePath() {
-  return process.env.GITHUB_FILE_DB_PATH || path.join(__dirname, '..', '..', 'data', 'github-users.json');
-}
+const EMPTY_STORE = {
+  users: [],
+  pendingSignups: [],
+  passwordResets: []
+};
 
 function isGitHubApiMode() {
   return String(process.env.GITHUB_DB_MODE || '').toLowerCase() === 'api';
+}
+
+function getLocalStorePath() {
+  return process.env.EMAIL_AUTH_FILE_DB_PATH || path.join(__dirname, '..', '..', 'data', 'email-auth.json');
 }
 
 function getGitHubDbConfig() {
@@ -14,7 +20,7 @@ function getGitHubDbConfig() {
     owner: process.env.GITHUB_DB_OWNER,
     repo: process.env.GITHUB_DB_REPO,
     branch: process.env.GITHUB_DB_BRANCH || 'main',
-    filePath: process.env.GITHUB_DB_FILE_PATH || 'server/data/github-users.json',
+    filePath: process.env.GITHUB_DB_EMAIL_FILE_PATH || 'server/data/email-auth.json',
     token: process.env.GITHUB_DB_TOKEN,
     committerName: process.env.GITHUB_DB_COMMITTER_NAME || 'Auth App Bot',
     committerEmail: process.env.GITHUB_DB_COMMITTER_EMAIL || 'noreply@example.com'
@@ -33,7 +39,7 @@ async function githubApiRequest(url, options = {}) {
   const headers = {
     Accept: 'application/vnd.github+json',
     Authorization: `Bearer ${cfg.token}`,
-    'User-Agent': 'auth-app-github-db',
+    'User-Agent': 'auth-app-email-db',
     ...(options.headers || {})
   };
 
@@ -50,6 +56,14 @@ async function githubApiRequest(url, options = {}) {
   return body;
 }
 
+function normalizeStore(value) {
+  return {
+    users: Array.isArray(value?.users) ? value.users : [],
+    pendingSignups: Array.isArray(value?.pendingSignups) ? value.pendingSignups : [],
+    passwordResets: Array.isArray(value?.passwordResets) ? value.passwordResets : []
+  };
+}
+
 async function readStoreFromGitHub() {
   const cfg = getGitHubDbConfig();
   if (!cfg.owner || !cfg.repo || !cfg.token) {
@@ -63,15 +77,10 @@ async function readStoreFromGitHub() {
     const payload = await githubApiRequest(url, { method: 'GET' });
     const decoded = Buffer.from(String(payload.content || '').replace(/\n/g, ''), 'base64').toString('utf8');
     const parsed = JSON.parse(decoded);
-    return {
-      store: {
-        users: Array.isArray(parsed.users) ? parsed.users : []
-      },
-      sha: payload.sha || null
-    };
+    return { store: normalizeStore(parsed), sha: payload.sha || null };
   } catch (error) {
     if (error.status === 404) {
-      return { store: { users: [] }, sha: null };
+      return { store: normalizeStore(EMPTY_STORE), sha: null };
     }
     throw error;
   }
@@ -81,10 +90,10 @@ async function writeStoreToGitHub(store, currentSha) {
   const cfg = getGitHubDbConfig();
   const encodedPath = encodeGitHubPath(cfg.filePath);
   const url = `https://api.github.com/repos/${cfg.owner}/${cfg.repo}/contents/${encodedPath}`;
-  const content = Buffer.from(JSON.stringify(store, null, 2), 'utf8').toString('base64');
+  const content = Buffer.from(JSON.stringify(normalizeStore(store), null, 2), 'utf8').toString('base64');
 
   const payload = {
-    message: 'chore(auth): update github user store',
+    message: 'chore(auth): update email auth store',
     content,
     branch: cfg.branch,
     committer: {
@@ -104,47 +113,50 @@ async function writeStoreToGitHub(store, currentSha) {
   });
 }
 
-async function ensureStoreFile() {
-  const storePath = getStorePath();
+async function ensureLocalStore() {
+  const storePath = getLocalStorePath();
   const dir = path.dirname(storePath);
   await fs.mkdir(dir, { recursive: true });
 
   try {
     await fs.access(storePath);
   } catch {
-    const initial = { users: [] };
-    await fs.writeFile(storePath, JSON.stringify(initial, null, 2), 'utf-8');
+    await fs.writeFile(storePath, JSON.stringify(EMPTY_STORE, null, 2), 'utf8');
   }
 
   return storePath;
 }
 
 async function readStoreFromFile() {
-  const storePath = await ensureStoreFile();
-  const raw = await fs.readFile(storePath, 'utf-8');
+  const storePath = await ensureLocalStore();
+  const raw = await fs.readFile(storePath, 'utf8');
 
   try {
-    const parsed = JSON.parse(raw);
-    if (!Array.isArray(parsed.users)) {
-      return { users: [] };
-    }
-    return parsed;
+    return normalizeStore(JSON.parse(raw));
   } catch {
-    return { users: [] };
+    return normalizeStore(EMPTY_STORE);
   }
 }
 
 async function writeStoreToFile(store) {
-  const storePath = await ensureStoreFile();
-  await fs.writeFile(storePath, JSON.stringify(store, null, 2), 'utf-8');
+  const storePath = await ensureLocalStore();
+  await fs.writeFile(storePath, JSON.stringify(normalizeStore(store), null, 2), 'utf8');
+}
+
+async function readStoreWithMeta() {
+  if (isGitHubApiMode()) {
+    return readStoreFromGitHub();
+  }
+
+  return {
+    store: await readStoreFromFile(),
+    sha: null
+  };
 }
 
 async function readStore() {
-  if (isGitHubApiMode()) {
-    const result = await readStoreFromGitHub();
-    return result.store;
-  }
-  return readStoreFromFile();
+  const { store } = await readStoreWithMeta();
+  return store;
 }
 
 async function writeStore(store) {
@@ -153,54 +165,11 @@ async function writeStore(store) {
     await writeStoreToGitHub(store, current.sha);
     return;
   }
+
   await writeStoreToFile(store);
 }
 
-async function upsertGithubUser(user) {
-  const store = await readStore();
-  const githubId = String(user.githubId || user.id || '');
-
-  if (!githubId) {
-    throw new Error('Cannot persist GitHub user without githubId.');
-  }
-
-  const now = new Date().toISOString();
-  const normalized = {
-    id: githubId,
-    githubId,
-    username: user.username || '',
-    email: user.email || `${user.username || 'github_user'}@github.local`,
-    githubProfile: user.githubProfile || null,
-    authMethod: 'github',
-    updatedAt: now
-  };
-
-  const existingIndex = store.users.findIndex((entry) => String(entry.githubId) === githubId);
-  if (existingIndex >= 0) {
-    const existing = store.users[existingIndex];
-    store.users[existingIndex] = {
-      ...existing,
-      ...normalized,
-      createdAt: existing.createdAt || now
-    };
-  } else {
-    store.users.push({
-      ...normalized,
-      createdAt: now
-    });
-  }
-
-  await writeStore(store);
-  return store.users.find((entry) => String(entry.githubId) === githubId) || normalized;
-}
-
-async function findGithubUserById(githubId) {
-  const store = await readStore();
-  return store.users.find((entry) => String(entry.githubId) === String(githubId)) || null;
-}
-
 module.exports = {
-  getStorePath,
-  upsertGithubUser,
-  findGithubUserById
+  readStore,
+  writeStore
 };
