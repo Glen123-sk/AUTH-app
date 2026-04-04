@@ -3,23 +3,38 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Auth App | Landing</title>
+  <title>Auth App | Secure Landing</title>
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body data-page="landing">
-  <main class="container">
-    <section class="card hero-card">
-      <h1>Secure Authentication Portal</h1>
-      <p>Real OTP verification over SMTP, secure login, and password recovery.</p>
-      <div class="actions">
-        <button id="go-login" class="btn-primary">Login</button>
-        <button id="go-signup" class="btn-outline">Sign Up</button>
+  <main class="poster-shell">
+    <section class="sheet">
+      <div class="left">
+        <div class="actions">
+          <button id="go-login" class="btn solid">Login</button>
+          <button id="go-signup" class="btn line">Sign Up</button>
+        </div>
+        <span class="stamp">Secured</span>
       </div>
-      <div class="link-row" style="justify-content:center; margin-top: 18px;">
-        <a href="forgot-password.html" id="go-forgot">Forgot password?</a>
+      <div class="right">
+        <div class="rule"></div>
+        <p>Real-time OTP delivery with encrypted sessions and robust password recovery flows.</p>
+        <a href="forgot-password.html" id="go-forgot" class="lab-link">Forgot password?</a>
+        <div class="rule"></div>
       </div>
     </section>
+    <section class="contact-block contact-standalone" aria-label="Contact details">
+      <h2>Contact</h2>
+      <p><strong>Com serve.</strong></p>
+      <p><strong>Email:</strong> com205260@gmail.ccom</p>
+      <p><strong>Phone number:</strong> 082 276 0871</p>
+      <p><strong>Street:</strong> 2219 Bo Meul St</p>
+      <p><strong>City:</strong> Cape Town</p>
+      <p><strong>State/province/area:</strong> Western Cape</p>
+    </section>
   </main>
+  <script src="colors.js"></script>
+  <script src="scale.js"></script>
   <script src="app.js"></script>
 </body>
 </html>

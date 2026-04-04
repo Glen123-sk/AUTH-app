@@ -1,5 +1,7 @@
 :root {
+  /* Fallback defaults only. Primary color control is in client/colors.js */
   --bg: #f3f8ff;
+  --landing-bg: repeating-linear-gradient(90deg, rgba(0,0,0,0.03) 0 1px, transparent 1px 24px), linear-gradient(180deg, #f8f7f2 0%, #f2f0e8 100%);
   --bg-accent: radial-gradient(circle at 10% 10%, #d8ecff 0%, transparent 45%), radial-gradient(circle at 90% 20%, #ffe2d1 0%, transparent 40%), linear-gradient(135deg, #f6fbff 0%, #fff8f3 100%);
   --card: #ffffff;
   --text: #102238;
@@ -11,10 +13,51 @@
   --border: #d8e4f2;
   --shadow: 0 20px 40px rgba(16, 34, 56, 0.1);
   --radius: 16px;
+  --paper: #f5f4ef;
+  --ink: #212121;
+  --edge: #202020;
+  --accent: #d39a34;
+  --scale-primaryButton: 0.5;
+  --scale-secondaryButton: 0.5;
+  --scale-formInput: 0.5;
+  --scale-formLabel: 0.5;
+  --scale-container: 0.5;
+  --scale-heading: 0.5;
+  --scale-text: 0.5;
+  --scale-spacing: 0.5;
+  --scale-otpInput: 0.5;
+  --scale-smallText: 0.5;
+  --stretch-formCard: 1;
+  --stretch-landingSheet: 1;
+  --stretch-contactBlock: 1;
+  --stretch-actionSlots: 1;
+  --block-size-login: 1;
+  --block-size-signup: 1;
+  --block-size-forgot: 1;
+  --block-size-otp: 1;
+  --block-size-reset: 1;
+  --block-size-success: 1;
+  --block-size-landingSheet: 1;
+  --block-size-contact: 1;
+  --page-block-size: 1;
+  --offset-x-formCard: 0px;
+  --offset-x-landingSheet: 0px;
+  --offset-x-contactBlock: 0px;
+  --offset-y-contactBlock: 0px;
+  --container-offset-y: 0px;
+  --auth-card-offset-y: 0px;
+  --landing-sheet-offset-y: 0px;
 }
 
 * {
   box-sizing: border-box;
+}
+
+html.preload-no-motion *,
+html.preload-no-motion *::before,
+html.preload-no-motion *::after {
+  animation: none !important;
+  transition: none !important;
 }
 
 body {
@@ -86,9 +129,10 @@ input:focus {
 button {
   border: none;
   border-radius: 10px;
-  padding: 12px 14px;
+  padding: calc(10px * var(--scale-primaryButton)) calc(14px * var(--scale-primaryButton));
+  min-height: calc(42px * var(--scale-primaryButton) + 20px);
   font-weight: 700;
-  font-size: 0.98rem;
+  font-size: calc(0.98rem * var(--scale-primaryButton) + 0.5rem);
   cursor: pointer;
   transition: transform 0.15s ease, background-color 0.2s ease;
 }
@@ -113,10 +157,19 @@ button:active {
 }
 
 .actions {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
   gap: 12px;
   margin-top: 18px;
+}
+
+.actions > * {
+  flex: 0 1 clamp(calc(150px * var(--stretch-actionSlots)), calc(42vw * var(--stretch-actionSlots)), calc(220px * var(--stretch-actionSlots)));
+  width: clamp(calc(150px * var(--stretch-actionSlots)), calc(42vw * var(--stretch-actionSlots)), calc(220px * var(--stretch-actionSlots)));
+  min-width: calc(150px * var(--stretch-actionSlots));
+  max-width: calc(220px * var(--stretch-actionSlots));
 }
 
 .link-row {
@@ -161,12 +214,451 @@ a:hover {
   font-size: 1.2rem;
 }
 
+/* Print Poster Edition (Landing Page Styles) */
+body[data-page="landing"] {
+  font-family: "Georgia", "Times New Roman", serif;
+  background: var(--landing-bg);
+  color: var(--ink);
+  padding: 24px 16px;
+}
+
+.poster-shell {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  gap: clamp(14px, 2.5vw, 24px);
+  padding: 10px 0;
+}
+
+.sheet {
+  width: min(calc(980px * var(--stretch-landingSheet) * var(--block-size-landingSheet)), 100%);
+  border: 2px solid var(--edge);
+  background: var(--paper);
+  box-shadow: 10px 10px 0 #222;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  transform: translateX(var(--offset-x-landingSheet)) translateY(var(--landing-sheet-offset-y));
+}
+
+.left,
+.right {
+  padding: clamp(calc(20px * var(--scale-spacing)), 4vw, calc(38px * var(--scale-spacing)));
+}
+
+.left {
+  border-right: 2px solid var(--edge);
+}
+
+.kicker {
+  margin: 0;
+  font-size: 0.82rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  font-family: "Georgia", serif;
+}
+
+body[data-page="landing"] h1 {
+  margin: 12px 0 0;
+  font-size: clamp(2rem, 4.2vw, 3.3rem);
+  line-height: 0.95;
+  text-transform: uppercase;
+  font-family: "Georgia", serif;
+  color: var(--ink);
+}
+
+body[data-page="landing"] p {
+  color: #585858;
+  line-height: 1.55;
+  font-size: 1.02rem;
+  margin-top: 0;
+}
+
+body[data-page="landing"] .actions {
+  margin-top: calc(22px * var(--scale-spacing));
+  display: grid;
+  gap: calc(10px * var(--scale-spacing));
+  justify-items: start;
+  flex-wrap: wrap;
+}
+
+body[data-page="landing"] .btn {
+  --landing-btn-scale: var(--scale-primaryButton);
+  --btn-shift-x: 0px;
+  min-height: calc(48px * var(--landing-btn-scale) + 15px);
+  min-width: calc(210px * var(--landing-btn-scale) + 80px);
+  padding: calc(10px * var(--landing-btn-scale)) calc(16px * var(--landing-btn-scale));
+  font-weight: 700;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid var(--edge);
+  font-family: "Georgia", serif;
+  cursor: pointer;
+  transition: transform 0.15s ease, background-color 0.2s ease;
+  transform: translateX(var(--btn-shift-x)) translateY(0);
+}
+
+body[data-page="landing"] .btn.solid {
+  background: var(--edge);
+  color: #f8f7f2;
+}
+
+body[data-page="landing"] .btn.line {
+  background: transparent;
+  color: var(--ink);
+}
+
+body[data-page="landing"] #go-login {
+  --landing-btn-scale: var(--scale-btnLandingLogin);
+  --btn-shift-x: var(--offset-x-btnLandingLogin);
+}
+
+body[data-page="landing"] #go-signup {
+  --landing-btn-scale: var(--scale-btnLandingSignup);
+  --btn-shift-x: var(--offset-x-btnLandingSignup);
+}
+
+body[data-page="landing"] .btn:hover {
+  transform: translateX(var(--btn-shift-x)) translateY(-1px);
+}
+
+body[data-page="landing"] .btn:active {
+  transform: translateX(var(--btn-shift-x)) translateY(1px);
+}
+
+.stamp {
+  margin-top: calc(18px * var(--scale-spacing));
+  display: inline-block;
+  border: 2px dashed #444;
+  color: #444;
+  padding: calc(6px * var(--scale-spacing)) calc(10px * var(--scale-spacing));
+  font-size: calc(0.82rem * var(--scale-text) + 0.2rem);
+  transform: rotate(-4deg);
+  font-family: "Georgia", serif;
+}
+
+.right {
+  display: grid;
+  align-content: center;
+  gap: calc(14px * var(--scale-spacing));
+  background: linear-gradient(180deg, rgba(211, 154, 52, 0.13), rgba(0, 0, 0, 0));
+}
+
+.rule {
+  height: 2px;
+  background: #2f2f2f;
+  width: 100%;
+}
+
+.lab-link {
+  color: var(--ink);
+  text-decoration: underline;
+  font-weight: 700;
+  font-family: "Georgia", serif;
+}
+
+.lab-link:hover {
+  text-decoration: none;
+}
+
+.contact-block {
+  background: var(--paper);
+  border: 2px solid var(--edge);
+  border-radius: 0;
+  box-shadow: 8px 8px 0 rgba(0, 0, 0, 0.15);
+  padding: calc(32px * var(--scale-container));
+  font-family: "Georgia", serif;
+}
+
+.contact-standalone {
+  width: min(calc(980px * var(--stretch-contactBlock) * var(--block-size-contact)), 100%);
+  transform: translateX(var(--offset-x-contactBlock)) translateY(var(--offset-y-contactBlock));
+}
+
+.contact-block h2 {
+  margin: 0 0 8px;
+  font-size: 1rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--ink);
+}
+
+.contact-block p {
+  margin: 0 0 6px;
+  font-size: 0.95rem;
+  line-height: 1.4;
+  color: #1f1f1f;
+}
+
+.contact-block p:last-child {
+  margin-bottom: 0;
+}
+
+@media (max-width: 860px) {
+  .sheet {
+    grid-template-columns: 1fr;
+  }
+
+  .left {
+    border-right: 0;
+    border-bottom: 2px solid var(--edge);
+  }
+
+  body[data-page="landing"] .actions {
+    justify-items: center;
+  }
+
+  body[data-page="landing"] .btn {
+    width: clamp(190px, 84vw, 250px);
+  }
+}
+
 @media (max-width: 560px) {
   .card {
     padding: 20px;
   }
 
   .actions {
-    grid-template-columns: 1fr;
+    flex-direction: column;
+  }
+
+  .actions > * {
+    flex-basis: auto;
+    width: clamp(calc(160px * var(--stretch-actionSlots)), calc(78vw * var(--stretch-actionSlots)), calc(220px * var(--stretch-actionSlots)));
+    min-width: calc(160px * var(--stretch-actionSlots));
+    max-width: calc(220px * var(--stretch-actionSlots));
+  }
+}
+
+/* Poster Edition Theme for All Pages */
+body.poster-page {
+  font-family: "Georgia", "Times New Roman", serif;
+  background: var(--poster-bg);
+  color: var(--ink);
+  padding: 24px 16px;
+}
+
+body.poster-page .container {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+}
+
+body.poster-page .card {
+  width: min(100%, calc((520px * var(--scale-container) + 280px) * var(--stretch-formCard) * var(--page-block-size)));
+  background: var(--paper);
+  border: 2px solid var(--edge);
+  border-radius: 0;
+  box-shadow: 8px 8px 0 rgba(0,0,0,0.15);
+  padding: calc(32px * var(--scale-container) * var(--page-block-size));
+  transform: translateX(var(--offset-x-formCard)) translateY(var(--auth-card-offset-y));
+}
+
+body[data-page="login"].poster-page {
+  --page-block-size: var(--block-size-login);
+}
+
+body[data-page="signup"].poster-page {
+  --page-block-size: var(--block-size-signup);
+}
+
+body[data-page="forgot"].poster-page {
+  --page-block-size: var(--block-size-forgot);
+}
+
+body[data-page="otp"].poster-page {
+  --page-block-size: var(--block-size-otp);
+}
+
+body[data-page="reset"].poster-page {
+  --page-block-size: var(--block-size-reset);
+}
+
+body[data-page="success"].poster-page {
+  --page-block-size: var(--block-size-success);
+}
+
+body.poster-page h1 {
+  margin: 0 0 10px;
+  font-size: calc(1.8rem * var(--scale-heading) + 0.7rem);
+  line-height: 1.1;
+  text-transform: uppercase;
+  font-family: "Georgia", serif;
+  color: var(--ink);
+}
+
+body.poster-page p {
+  color: #585858;
+  margin-top: 0;
+  line-height: 1.5;
+}
+
+body.poster-page form {
+  display: grid;
+  gap: calc(14px * var(--scale-spacing));
+  margin-top: calc(16px * var(--scale-spacing));
+}
+
+body.poster-page label {
+  font-size: calc(0.88rem * var(--scale-formLabel) + 0.3rem);
+  font-weight: 700;
+  margin-bottom: calc(4px * var(--scale-formLabel));
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-family: "Georgia", serif;
+}
+
+body.poster-page input {
+  width: 100%;
+  padding: calc(11px * var(--scale-formInput)) calc(12px * var(--scale-formInput));
+  border-radius: 0;
+  border: 1px solid var(--edge);
+  outline: none;
+  font-size: calc(0.96rem * var(--scale-formInput) + 0.3rem);
+  font-family: inherit;
+}
+
+body.poster-page input:focus {
+  border-color: var(--accent);
+  box-shadow: inset 0 0 0 1px var(--accent);
+}
+
+body.poster-page button {
+  --poster-btn-scale: var(--scale-primaryButton);
+  --btn-shift-x: 0px;
+  border: none;
+  border-radius: 0;
+  padding: calc(11px * var(--poster-btn-scale)) calc(14px * var(--poster-btn-scale));
+  min-height: calc(46px * var(--poster-btn-scale) + 15px);
+  font-weight: 700;
+  font-size: calc(0.92rem * var(--poster-btn-scale) + 0.4rem);
+  cursor: pointer;
+  transition: transform 0.15s ease;
+  font-family: "Georgia", serif;
+  text-transform: uppercase;
+  border: 2px solid var(--edge);
+  transform: translateX(var(--btn-shift-x)) translateY(0);
+}
+
+body[data-page="login"] button[type="submit"] {
+  --poster-btn-scale: var(--scale-btnLoginSubmit);
+  --btn-shift-x: var(--offset-x-btnLoginSubmit);
+}
+
+body[data-page="signup"] button[type="submit"] {
+  --poster-btn-scale: var(--scale-btnSignupSubmit);
+  --btn-shift-x: var(--offset-x-btnSignupSubmit);
+}
+
+body[data-page="forgot"] button[type="submit"] {
+  --poster-btn-scale: var(--scale-btnForgotSubmit);
+  --btn-shift-x: var(--offset-x-btnForgotSubmit);
+}
+
+body[data-page="otp"] form button[type="submit"] {
+  --poster-btn-scale: var(--scale-btnOtpVerify);
+  --btn-shift-x: var(--offset-x-btnOtpVerify);
+}
+
+body[data-page="otp"] #resend-btn {
+  --poster-btn-scale: var(--scale-btnOtpResend);
+  --btn-shift-x: var(--offset-x-btnOtpResend);
+}
+
+body[data-page="reset"] button[type="submit"] {
+  --poster-btn-scale: var(--scale-btnResetSubmit);
+  --btn-shift-x: var(--offset-x-btnResetSubmit);
+}
+
+body[data-page="success"] .actions .solid {
+  --btn-shift-x: var(--offset-x-btnSuccessLogin);
+}
+
+body[data-page="success"] .actions .line {
+  --poster-btn-scale: var(--scale-btnSuccessHome);
+  --btn-shift-x: var(--offset-x-btnSuccessHome);
+}
+
+body.poster-page button.solid {
+  background: var(--edge);
+  color: #f8f7f2;
+}
+
+body.poster-page button.line {
+  background: transparent;
+  color: var(--ink);
+}
+
+body.poster-page button:hover {
+  transform: translateX(var(--btn-shift-x)) translateY(-1px);
+}
+
+body.poster-page button:active {
+  transform: translateX(var(--btn-shift-x)) translateY(1px);
+}
+
+body.poster-page .link-row {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  align-items: center;
+  font-size: calc(0.88rem * var(--scale-text) + 0.3rem);
+  margin-top: calc(12px * var(--scale-spacing));
+  gap: calc(12px * var(--scale-spacing));
+}
+
+body.poster-page a {
+  color: var(--ink);
+  text-decoration: underline;
+  font-weight: 700;
+  font-family: "Georgia", serif;
+}
+
+body.poster-page a:hover {
+  text-decoration: none;
+}
+
+body.poster-page .message {
+  min-height: 24px;
+  font-size: calc(0.9rem * var(--scale-text) + 0.3rem);
+  font-weight: 600;
+  margin-top: calc(12px * var(--scale-spacing));
+  text-align: center;
+}
+
+body.poster-page .message.error {
+  color: var(--danger);
+}
+
+body.poster-page .message.success {
+  color: var(--success);
+}
+
+body.poster-page .small {
+  font-size: calc(0.82rem * var(--scale-smallText) + 0.2rem);
+  color: #585858;
+  margin-top: calc(4px * var(--scale-spacing));
+}
+
+body.poster-page .otp-input {
+  letter-spacing: 0.8rem;
+  text-align: center;
+  font-size: calc(1.3rem * var(--scale-otpInput) + 0.5rem);
+  font-family: "Courier New", monospace;
+}
+
+@media (max-width: 560px) {
+  body.poster-page .card {
+    padding: 20px;
+  }
+
+  body.poster-page .link-row {
+    flex-direction: column;
+  }
+
+  body.poster-page button {
+    width: 100%;
   }
 }

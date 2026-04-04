@@ -6,10 +6,10 @@
   <title>Auth App | Sign Up</title>
   <link rel="stylesheet" href="styles.css" />
 </head>
-<body data-page="signup">
+<body data-page="signup" class="poster-page">
   <main class="container">
     <section class="card">
-      <h1>Create your account</h1>
+      <h1>Create Account</h1>
       <p>Sign up to receive a one-time verification code by email.</p>
 
       <form id="signup-form">
@@ -30,7 +30,7 @@
           <label for="confirmPassword">Confirm Password</label>
           <input id="confirmPassword" name="confirmPassword" type="password" required />
         </div>
-        <button class="btn-primary" type="submit">Submit</button>
+        <button class="btn solid" type="submit">Submit</button>
       </form>
 
       <div id="signup-message" class="message"></div>
@@ -40,6 +40,8 @@
       </div>
     </section>
   </main>
+  <script src="colors.js"></script>
+  <script src="scale.js"></script>
   <script src="app.js"></script>
 </body>
 </html>
