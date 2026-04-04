@@ -29,14 +29,6 @@ function getApiBaseUrl() {
     return savedBase.replace(/\/$/, '');
   }
 
-  if (
-    window.location.protocol === 'file:' ||
-    window.location.hostname === 'localhost' ||
-    window.location.hostname === '127.0.0.1'
-  ) {
-    return 'http://localhost:5000';
-  }
-
   return window.location.origin;
 }
 

@@ -32,6 +32,7 @@ For production deployment to your domain:
    - `GITHUB_DB_MODE=api`
    - `GITHUB_DB_OWNER`, `GITHUB_DB_REPO`, `GITHUB_DB_BRANCH`, `GITHUB_DB_FILE_PATH`
    - `GITHUB_DB_TOKEN` (GitHub PAT with repo contents write permission)
+   - Set `client/config.js` `APP_CONFIG.API_BASE_URL` to the public URL of your Node.js backend if it is separate from the frontend
 
 3. Ensure your GitHub OAuth app settings match:
    - Homepage URL: `https://your-domain.com`

@@ -46,8 +46,8 @@ const config = {
   smtpUser: process.env.SMTP_USER,
   smtpPass: process.env.SMTP_PASS,
   smtpFrom: process.env.SMTP_FROM || 'Auth App <no-reply@example.com>',
-  githubCallbackUrl: process.env.GITHUB_CALLBACK_URL || 'http://localhost:5000/auth/github/callback',
-  corsOrigin: process.env.CORS_ORIGIN || 'http://localhost:5000,http://127.0.0.1:5000',
+  githubCallbackUrl: process.env.GITHUB_CALLBACK_URL || 'https://nexl.me/auth/github/callback',
+  corsOrigin: process.env.CORS_ORIGIN || 'https://nexl.me,https://www.nexl.me',
   sessionCookieSecure:
     (process.env.SESSION_COOKIE_SECURE || 'auto').toLowerCase() === 'auto'
       ? null
@@ -81,8 +81,8 @@ function validateConfig() {
         throw new Error('In production, GITHUB_CALLBACK_URL must use https.');
       }
 
-      if (['localhost', '127.0.0.1'].includes(callbackUrl.hostname)) {
-        throw new Error('In production, GITHUB_CALLBACK_URL cannot point to localhost or 127.0.0.1.');
+      if (callbackUrl.hostname === 'localhost' || callbackUrl.hostname === '127.0.0.1') {
+        throw new Error('In production, GITHUB_CALLBACK_URL cannot point to a loopback host.');
       }
     }
   }
@@ -504,7 +504,7 @@ async function startServer() {
   });
 
   const server = app.listen(config.port, () => {
-    console.log(`Server running on http://localhost:${config.port}`);
+    console.log(`Server running on port ${config.port}`);
   });
 
   const gracefulShutdown = (signal) => {
