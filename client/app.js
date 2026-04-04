@@ -23,32 +23,52 @@ function getApiBaseUrl() {
   return window.location.origin;
 }
 
+function getApiBaseCandidates() {
+  const primary = getApiBaseUrl();
+  const candidates = [primary];
+
+  // Common production setup: frontend on root, backend behind /api
+  if (!/\/api$/i.test(primary)) {
+    candidates.push(`${primary}/api`);
+  }
+
+  return Array.from(new Set(candidates));
+}
+
 async function apiPost(url, payload) {
-  const apiUrl = url.startsWith('http') ? url : new URL(url, getApiBaseUrl()).toString();
+  const bases = url.startsWith('http') ? [''] : getApiBaseCandidates();
+  let lastError = null;
 
-  let res;
-  try {
-    res = await fetch(apiUrl, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
-    });
-  } catch (error) {
-    throw new Error(`Unable to reach the authentication API at ${getApiBaseUrl()}. ${error.message}`);
-  }
+  for (const base of bases) {
+    const apiUrl = url.startsWith('http') ? url : new URL(url, base).toString();
 
-  const contentType = res.headers.get('content-type') || '';
-  const raw = await res.text();
-  let data = {};
-  if (contentType.includes('application/json')) {
+    let res;
     try {
-      data = JSON.parse(raw || '{}');
-    } catch {
-      data = {};
+      res = await fetch(apiUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+    } catch (error) {
+      lastError = new Error(`Unable to reach the authentication API at ${base || getApiBaseUrl()}. ${error.message}`);
+      continue;
     }
-  }
 
-  if (!res.ok) {
+    const contentType = res.headers.get('content-type') || '';
+    const raw = await res.text();
+    let data = {};
+    if (contentType.includes('application/json')) {
+      try {
+        data = JSON.parse(raw || '{}');
+      } catch {
+        data = {};
+      }
+    }
+
+    if (res.ok) {
+      return data;
+    }
+
     const textFallback = raw && !contentType.includes('application/json')
       ? raw.slice(0, 140).replace(/\s+/g, ' ')
       : '';
@@ -59,10 +79,17 @@ async function apiPost(url, payload) {
       textFallback ||
       `HTTP ${res.status}`;
 
+    // If root path returns a common proxy/static error, try next candidate (/api).
+    const isRetryable = [404, 405, 502, 503].includes(res.status);
+    if (isRetryable && base === getApiBaseUrl() && bases.length > 1) {
+      lastError = new Error(detail);
+      continue;
+    }
+
     throw new Error(detail);
   }
 
-  return data;
+  throw lastError || new Error('Request failed');
 }
 
 function isStrongPassword(value) {
