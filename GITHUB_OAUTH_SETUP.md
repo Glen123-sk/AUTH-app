@@ -168,7 +168,7 @@ Alternatively, if a GitHub user with a matching email logs in for the first time
 
 - GitHub sessions are stored server-side using `express-session`
 - Session cookies expire after 24 hours by default
-- Sessions are stored in the application's memory (for production, consider MongoDB session store)
+- User records are persisted to a local JSON datastore
 
 ## Security Considerations
 
@@ -191,7 +191,7 @@ When deploying to production:
    - Set Homepage URL to `https://yourdomain.com`
    - Update Authorization callback URL to `https://yourdomain.com/auth/github/callback`
 
-3. Use a session store (e.g., MongoDB) instead of memory for production
+3. Ensure your deployment has persistent disk access for `GITHUB_FILE_DB_PATH`
 
 4. Enable HTTPS for your application
 
