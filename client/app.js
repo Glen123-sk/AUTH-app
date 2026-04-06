@@ -19,14 +19,20 @@ function getApiBaseUrl() {
     return fromQuery.replace(/\/$/, '');
   }
 
+  const savedBase = localStorage.getItem('API_BASE_URL');
+  if (savedBase) {
+    const normalizedSaved = savedBase.replace(/\/$/, '');
+    const isLocalHost = ['localhost', '127.0.0.1'].includes(window.location.hostname);
+    const savedLooksRemote = /^https?:\/\/(?!localhost(?::\d+)?|127\.0\.0\.1(?::\d+)?)/i.test(normalizedSaved);
+
+    if (!(isLocalHost && savedLooksRemote)) {
+      return normalizedSaved;
+    }
+  }
+
   const configuredBase = window.APP_CONFIG?.API_BASE_URL;
   if (configuredBase) {
     return configuredBase.replace(/\/$/, '');
-  }
-
-  const savedBase = localStorage.getItem('API_BASE_URL');
-  if (savedBase) {
-    return savedBase.replace(/\/$/, '');
   }
 
   return window.location.origin;
@@ -73,6 +79,11 @@ function buildApiUrl(base, path) {
 }
 
 async function apiPost(url, payload) {
+  const liveProvider = window.LiveAuthProvider;
+  if (liveProvider?.enabled && typeof liveProvider.post === 'function') {
+    return await liveProvider.post(url, payload);
+  }
+
   const bases = url.startsWith('http') ? [''] : getApiBaseCandidates();
   let lastError = null;
 
@@ -187,8 +198,8 @@ function setupSignup() {
 
     try {
       const data = await apiPost('/register', { username, email, password, confirmPassword });
-      setMessage('signup-message', data.message || 'OTP sent.', 'success');
-      go(`/otp.html?email=${encodeURIComponent(email)}&purpose=signup`);
+      setMessage('signup-message', data.message || 'Verification email sent.', 'success');
+      go(`/otp.html?email=${encodeURIComponent(email)}&purpose=verifyEmail`);
     } catch (error) {
       setMessage('signup-message', error.message, 'error');
     }
@@ -229,8 +240,7 @@ function setupForgotPassword() {
 
     try {
       await apiPost('/forgot-password', { email });
-      setMessage('forgot-message', 'If this email exists, OTP has been sent.', 'success');
-      go(`/otp.html?email=${encodeURIComponent(email)}&purpose=reset_password`);
+      setMessage('forgot-message', 'If this email exists, a reset link has been sent.', 'success');
     } catch (error) {
       setMessage('forgot-message', error.message, 'error');
     }
@@ -238,61 +248,46 @@ function setupForgotPassword() {
 }
 
 function setupOtpVerification() {
-  const form = document.getElementById('otp-form');
-  if (!form) return;
-
   const query = params();
+  const oobCode = query.get('oobCode') || '';
+  const mode = query.get('mode') || query.get('purpose') || '';
   const email = query.get('email') || '';
-  const purpose = query.get('purpose') || '';
-  const emailTarget = document.getElementById('otp-email');
-  if (emailTarget) {
-    emailTarget.textContent = email || 'unknown email';
+  const detailTarget = document.getElementById('otp-detail');
+  const titleTarget = document.getElementById('otp-title');
+  const resendBtn = document.getElementById('resend-btn');
+
+  if (titleTarget) {
+    titleTarget.textContent = 'Verify your email';
   }
 
-  const resendBtn = document.getElementById('resend-btn');
+  if (detailTarget) {
+    detailTarget.textContent = oobCode
+      ? 'Verifying your email now.'
+      : 'Check your inbox and click the verification link to activate your account.';
+  }
+
   if (resendBtn) {
     resendBtn.addEventListener('click', async () => {
       setMessage('otp-message', '', '');
       try {
-        if (purpose === 'signup') {
-          await apiPost('/register', { email, resend: true });
-        } else if (purpose === 'reset_password') {
-          await apiPost('/forgot-password', { email });
-        } else {
-          throw new Error('Unknown OTP purpose.');
-        }
-        setMessage('otp-message', 'OTP resent successfully.', 'success');
+        await apiPost('/verify-otp', { resend: true, email });
+        setMessage('otp-message', 'Verification email sent again.', 'success');
       } catch (error) {
         setMessage('otp-message', error.message, 'error');
       }
     });
   }
 
-  form.addEventListener('submit', async (e) => {
-    e.preventDefault();
+  if (oobCode && mode === 'verifyEmail') {
     setMessage('otp-message', '', '');
-
-    const otp = document.getElementById('otp').value.trim();
-    if (!/^\d{6}$/.test(otp)) {
-      return setMessage('otp-message', 'OTP must be exactly 6 digits.', 'error');
-    }
-
-    try {
-      const data = await apiPost('/verify-otp', { email, otp, purpose });
-
-      if (purpose === 'signup') {
-        go('/success.html?type=signup');
-        return;
-      }
-
-      if (purpose === 'reset_password') {
-        localStorage.setItem('resetToken', data.resetToken);
-        go(`/reset-password.html?email=${encodeURIComponent(email)}`);
-      }
-    } catch (error) {
-      setMessage('otp-message', error.message, 'error');
-    }
-  });
+    apiPost('/verify-otp', { oobCode })
+      .then(() => {
+        go('/success.html?type=verify-email');
+      })
+      .catch((error) => {
+        setMessage('otp-message', error.message, 'error');
+      });
+  }
 }
 
 function setupResetPassword() {
@@ -300,10 +295,30 @@ function setupResetPassword() {
   if (!form) return;
 
   const query = params();
+  const oobCode = query.get('oobCode') || '';
   const email = query.get('email') || '';
   const emailTarget = document.getElementById('reset-email');
   if (emailTarget) {
-    emailTarget.textContent = email || 'unknown email';
+    emailTarget.textContent = email || 'your email';
+  }
+
+  const resetHint = document.getElementById('reset-hint');
+  if (resetHint) {
+    resetHint.textContent = oobCode
+      ? 'Set a new password for your account.'
+      : 'Open the password reset link from your email to continue.';
+  }
+
+  if (oobCode) {
+    apiPost('/verify-reset-code', { oobCode })
+      .then((data) => {
+        if (emailTarget && data.email) {
+          emailTarget.textContent = data.email;
+        }
+      })
+      .catch((error) => {
+        setMessage('reset-message', error.message, 'error');
+      });
   }
 
   form.addEventListener('submit', async (e) => {
@@ -312,10 +327,8 @@ function setupResetPassword() {
 
     const password = document.getElementById('password').value;
     const confirmPassword = document.getElementById('confirmPassword').value;
-    const resetToken = localStorage.getItem('resetToken');
-
-    if (!resetToken) {
-      return setMessage('reset-message', 'Reset session expired. Restart forgot password flow.', 'error');
+    if (!oobCode) {
+      return setMessage('reset-message', 'Open the password reset link from your email to continue.', 'error');
     }
 
     if (!isStrongPassword(password)) {
@@ -327,8 +340,7 @@ function setupResetPassword() {
     }
 
     try {
-      await apiPost('/reset-password', { email, resetToken, password, confirmPassword });
-      localStorage.removeItem('resetToken');
+      await apiPost('/reset-password', { oobCode, password, confirmPassword });
       go('/success.html?type=reset');
     } catch (error) {
       setMessage('reset-message', error.message, 'error');
@@ -346,13 +358,19 @@ function setupSuccess() {
 
   if (type === 'signup') {
     heading.textContent = 'Signup completed';
-    detail.textContent = 'Your email has been verified and your account is now active.';
+    detail.textContent = 'Your account was created. Check your email to verify it.';
   } else if (type === 'login') {
     heading.textContent = 'Successfully logged in';
     detail.textContent = 'Welcome back. Your login was validated securely.';
   } else if (type === 'reset') {
     heading.textContent = 'Password updated';
     detail.textContent = 'Your password has been reset successfully. You can now log in with it.';
+  } else if (type === 'reset-email') {
+    heading.textContent = 'Reset email sent';
+    detail.textContent = 'If the account exists, a password reset link was sent to your email.';
+  } else if (type === 'verify-email') {
+    heading.textContent = 'Verification email sent';
+    detail.textContent = 'Check your inbox and click the verification link to activate your account.';
   } else {
     heading.textContent = 'Success';
     detail.textContent = 'Operation completed successfully.';

@@ -1,0 +1,22 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Production baseline: deny all direct browser writes for auth-sensitive docs.
+    // Move auth mutations to server-side code (Cloud Functions or API), then loosen only as needed.
+    match /users/{docId} {
+      allow read, write: if false;
+    }
+
+    match /pendingSignups/{docId} {
+      allow read, write: if false;
+    }
+
+    match /passwordResets/{docId} {
+      allow read, write: if false;
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

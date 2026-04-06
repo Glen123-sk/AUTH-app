@@ -35,10 +35,10 @@ const BTN_TEXT_SUBMIT = 50;        // "Submit" button size
 const BTN_TEXT_ALREADY_HAVE_AN_ACCOUNT = 50; // "Already have an account?" link text size
 
 // Forgot Password Page Buttons
-const BTN_TEXT_SEND_OTP = 70;      // "Send OTP" button size
+const BTN_TEXT_SEND_OTP = 70;      // "Send verification/reset link" button size
 const BTN_TEXT_BACK_TO_LOGIN = 10; // "Back to Login" link text size
 
-// OTP Verification Page Buttons
+// Email Verification Page Buttons
 const BTN_TEXT_VERIFY = 50;        // "Verify" button size
 const BTN_TEXT_RESEND_CODE = 50;   // "Resend Code" button size
 
@@ -126,7 +126,7 @@ const POS_X_SIGN_UP = 50;                    // "Sign Up" button x-position
 const POS_X_FORGOT_PASSWORD = 50;            // "Forgot password?" control x-position
 const POS_X_SUBMIT = 50;                     // "Submit" button x-position
 const POS_X_ALREADY_HAVE_AN_ACCOUNT = 50;    // "Already have an account?" control x-position
-const POS_X_SEND_OTP = 50;                   // "Send OTP" button x-position
+const POS_X_SEND_OTP = 50;                   // "Send verification/reset link" button x-position
 const POS_X_BACK_TO_LOGIN = 50;              // "Back to Login" control x-position
 const POS_X_VERIFY = 50;                     // "Verify" button x-position
 const POS_X_RESEND_CODE = 50;                // "Resend Code" button x-position
