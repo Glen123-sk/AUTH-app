@@ -4,7 +4,9 @@
   "private": true,
   "type": "commonjs",
   "scripts": {
-    "start": "node local-api.js"
+    "start": "node local-api.js",
+    "seed:firebase-users": "node scripts/create-fake-firebase-users.js 20",
+    "send:template-preview": "node scripts/send-template-preview-email.js"
   },
   "dependencies": {
     "dotenv": "^16.6.1",

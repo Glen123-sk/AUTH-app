@@ -1,0 +1,252 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Email Template Preview</title>
+  <style>
+    :root {
+      --bg: #e9eff7;
+      --panel: #ffffff;
+      --ink: #0f172a;
+      --muted: #475569;
+      --line: #c9d7ea;
+      --primary: #0ea5e9;
+      --warm: #f59e0b;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: 'Trebuchet MS', 'Segoe UI', Arial, sans-serif;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at 10% 5%, #dbeafe 0%, transparent 35%),
+        radial-gradient(circle at 88% 4%, #fef3c7 0%, transparent 40%),
+        var(--bg);
+      min-height: 100vh;
+      padding: 24px 14px 40px;
+    }
+    .wrap {
+      max-width: 1180px;
+      margin: 0 auto;
+    }
+    h1 {
+      margin: 0 0 8px;
+      font-size: clamp(1.5rem, 3vw, 2.2rem);
+      letter-spacing: -0.02em;
+    }
+    .sub {
+      margin: 0 0 24px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(280px, 1fr));
+      gap: 18px;
+    }
+    @media (max-width: 920px) {
+      .grid { grid-template-columns: 1fr; }
+    }
+    .shell {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: 0 16px 34px rgba(2, 6, 23, 0.08);
+    }
+    .tag {
+      padding: 10px 14px;
+      font-size: 12px;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      font-weight: 700;
+      color: #1e293b;
+      border-bottom: 1px solid var(--line);
+      background: #f8fbff;
+    }
+    iframe {
+      border: 0;
+      width: 100%;
+      height: 760px;
+      background: #fff;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>Email Template Preview</h1>
+    <p class="sub">Desktop and mobile-safe render preview for verification and reset emails.</p>
+
+    <div class="grid">
+      <section class="shell">
+        <div class="tag">Verification Email</div>
+        <iframe title="Verification Preview" srcdoc="<!DOCTYPE html>
+<html>
+<head>
+  <meta charset='utf-8'>
+  <meta name='viewport' content='width=device-width, initial-scale=1.0'>
+  <style>
+    :root { --bg:#f6f8fc; --ink:#0f172a; --muted:#475569; --line:#dbe3f1; --card:#ffffff; --primary:#0ea5e9; --primary-hover:#0284c7; --accent:#f59e0b; }
+    *{box-sizing:border-box}
+    body{margin:0;padding:0;background:radial-gradient(circle at 15% 0%, #e0f2fe 0%, transparent 45%),radial-gradient(circle at 100% 10%, #fef3c7 0%, transparent 50%),var(--bg);color:var(--ink);font-family:'Trebuchet MS','Segoe UI',Arial,sans-serif}
+    .container{max-width:680px;margin:0 auto;padding:32px 14px}
+    .brand{text-align:center;margin-bottom:14px;color:#334155;font-size:26px;letter-spacing:.08em;text-transform:uppercase;font-weight:900}
+    .card{background:var(--card);border:1px solid var(--line);border-radius:22px;overflow:hidden;box-shadow:0 14px 42px rgba(2,6,23,.1)}
+    .hero{background:linear-gradient(120deg,#0f172a 0%,#1e293b 45%,#0b607a 100%);color:#f8fafc;padding:30px 26px 24px;position:relative}
+    .hero:after{content:'';position:absolute;right:-24px;top:-24px;width:110px;height:110px;border-radius:50%;background:rgba(14,165,233,.2)}
+    .eyebrow{display:inline-block;padding:6px 12px;border-radius:999px;background:rgba(245,158,11,.18);color:#fde68a;font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;margin-bottom:12px}
+    .title{margin:0;font-size:30px;line-height:1.15;letter-spacing:-.02em}
+    .intro{margin:14px 0 0;font-size:16px;line-height:1.65;color:#dbeafe;max-width:560px}
+    .content{padding:24px 26px 22px}
+    .button{display:inline-block;padding:14px 24px;border-radius:12px;background:var(--primary);color:#fff;text-decoration:none;font-weight:700;font-size:15px;box-shadow:0 8px 20px rgba(14,165,233,.26)}
+    .button:hover{background:var(--primary-hover)}
+    .divider{margin:20px 0 16px;border:0;border-top:1px dashed #d6deed}
+    .label{margin:0 0 8px;font-size:12px;color:#64748b;text-transform:uppercase;letter-spacing:.06em;font-weight:700}
+    .link-box{margin:0;padding:10px 12px;background:#f8fbff;border:1px solid #d7e9f9;border-radius:10px;color:#0369a1;font-size:12px;line-height:1.6;word-break:break-all}
+    .footer{border-top:1px solid var(--line);padding:16px 26px 24px;color:var(--muted);font-size:12px;line-height:1.7;background:#fcfdff}
+    @media only screen and (max-width:600px){.container{padding:20px 10px}.hero{padding:24px 18px 20px}.content,.footer{padding-left:18px;padding-right:18px}.title{font-size:25px}}
+  </style>
+</head>
+<body>
+  <div class='container'>
+    <div class='brand'>COM-Serve</div>
+    <div class='card'>
+      <div class='hero'>
+        <div class='eyebrow'>Account verification</div>
+        <h1 class='title'>Verify your email address</h1>
+        <p class='intro'>Hello Glen, please verify your email to activate your account and keep your access secure.</p>
+      </div>
+      <div class='content'>
+        <a href='#' class='button'>Verify email</a>
+        <hr class='divider'>
+        <p class='label'>Manual link</p>
+        <p class='link-box'>https://example.com/verify?token=abc123xyz</p>
+      </div>
+      <div class='footer'>If you did not create this account, you can ignore this message.</div>
+    </div>
+  </div>
+</body>
+</html>"></iframe>
+      </section>
+
+      <section class="shell">
+        <div class="tag">Password Reset Email</div>
+        <iframe title="Reset Preview" srcdoc="<!DOCTYPE html>
+<html>
+<head>
+  <meta charset='utf-8'>
+  <meta name='viewport' content='width=device-width, initial-scale=1.0'>
+  <style>
+    :root { --bg:#f6f8fc; --ink:#0f172a; --muted:#475569; --line:#dbe3f1; --card:#ffffff; --primary:#0ea5e9; --primary-hover:#0284c7; --accent:#f59e0b; }
+    *{box-sizing:border-box}
+    body{margin:0;padding:0;background:radial-gradient(circle at 15% 0%, #e0f2fe 0%, transparent 45%),radial-gradient(circle at 100% 10%, #fef3c7 0%, transparent 50%),var(--bg);color:var(--ink);font-family:'Trebuchet MS','Segoe UI',Arial,sans-serif}
+    .container{max-width:680px;margin:0 auto;padding:32px 14px}
+    .brand{text-align:center;margin-bottom:14px;color:#334155;font-size:26px;letter-spacing:.08em;text-transform:uppercase;font-weight:900}
+    .card{background:var(--card);border:1px solid var(--line);border-radius:22px;overflow:hidden;box-shadow:0 14px 42px rgba(2,6,23,.1)}
+    .hero{background:linear-gradient(120deg,#0f172a 0%,#1e293b 45%,#0b607a 100%);color:#f8fafc;padding:30px 26px 24px;position:relative}
+    .hero:after{content:'';position:absolute;right:-24px;top:-24px;width:110px;height:110px;border-radius:50%;background:rgba(14,165,233,.2)}
+    .eyebrow{display:inline-block;padding:6px 12px;border-radius:999px;background:rgba(245,158,11,.18);color:#fde68a;font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;margin-bottom:12px}
+    .title{margin:0;font-size:30px;line-height:1.15;letter-spacing:-.02em}
+    .intro{margin:14px 0 0;font-size:16px;line-height:1.65;color:#dbeafe;max-width:560px}
+    .content{padding:24px 26px 22px}
+    .button{display:inline-block;padding:14px 24px;border-radius:12px;background:var(--primary);color:#fff;text-decoration:none;font-weight:700;font-size:15px;box-shadow:0 8px 20px rgba(14,165,233,.26)}
+    .button:hover{background:var(--primary-hover)}
+    .divider{margin:20px 0 16px;border:0;border-top:1px dashed #d6deed}
+    .label{margin:0 0 8px;font-size:12px;color:#64748b;text-transform:uppercase;letter-spacing:.06em;font-weight:700}
+    .link-box{margin:0;padding:10px 12px;background:#f8fbff;border:1px solid #d7e9f9;border-radius:10px;color:#0369a1;font-size:12px;line-height:1.6;word-break:break-all}
+    .footer{border-top:1px solid var(--line);padding:16px 26px 24px;color:var(--muted);font-size:12px;line-height:1.7;background:#fcfdff}
+    @media only screen and (max-width:600px){.container{padding:20px 10px}.hero{padding:24px 18px 20px}.content,.footer{padding-left:18px;padding-right:18px}.title{font-size:25px}}
+  </style>
+</head>
+<body>
+  <div class='container'>
+    <div class='brand'>COM-Serve</div>
+    <div class='card'>
+      <div class='hero'>
+        <div class='eyebrow'>Password reset</div>
+        <h1 class='title'>Reset your password</h1>
+        <p class='intro'>We received a request to reset your password. Use the button below to choose a new one.</p>
+      </div>
+      <div class='content'>
+        <a href='#' class='button'>Reset password</a>
+        <hr class='divider'>
+        <p class='label'>Manual link</p>
+        <p class='link-box'>https://example.com/reset?token=abc123xyz</p>
+      </div>
+      <div class='footer'>If you did not request a password reset, you can ignore this message.</div>
+    </div>
+  </div>
+</body>
+</html>"></iframe>
+      </section>
+
+      <section class="shell">
+        <div class="tag">Wallet Statement Email</div>
+        <iframe title="Wallet Preview" srcdoc="<!DOCTYPE html>
+<html>
+<head>
+  <meta charset='utf-8'>
+  <meta name='viewport' content='width=device-width, initial-scale=1.0'>
+  <style>
+    :root { color-scheme: light; --bg:#f4f7fb; --ink:#0f172a; --muted:#334155; --line:#d8e2ee; --card:#ffffff; --primary:#0b78d1; --primary-hover:#095da3; --warning-bg:#fff7ed; --warning-border:#fdba74; --warning-ink:#9a3412; }
+    *{box-sizing:border-box}
+    body{margin:0;padding:0;background:var(--bg);color:var(--ink);font-family:Arial,'Helvetica Neue',Helvetica,sans-serif}
+    .container{max-width:680px;margin:0 auto;padding:32px 14px}
+    .brand{text-align:center;margin-bottom:14px;color:#0f172a;font-size:26px;letter-spacing:.08em;text-transform:uppercase;font-weight:900}
+    .card{background:var(--card);border:1px solid var(--line);border-radius:22px;overflow:hidden;box-shadow:0 6px 18px rgba(2,6,23,.08)}
+    .hero{background:#eef6ff;color:#0f172a;padding:30px 26px 24px;position:relative}
+    .hero:after{content:'';position:absolute;right:-24px;top:-24px;width:110px;height:110px;border-radius:50%;background:rgba(11,120,209,.12)}
+    .eyebrow{display:inline-block;padding:6px 12px;border-radius:999px;background:#dbeafe;color:#1e3a8a;font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;margin-bottom:12px}
+    .title{margin:0;font-size:30px;line-height:1.15;letter-spacing:-.02em}
+    .intro{margin:14px 0 0;font-size:16px;line-height:1.65;color:#1e293b;max-width:560px}
+    .content{padding:24px 26px 22px}
+    .summary{margin:0 0 18px;padding:18px 18px 16px;border:1px solid var(--line);border-radius:16px;background:#f8fbff}
+    .summary-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+    .summary-item{padding:12px 14px;border-radius:12px;background:#ffffff;border:1px solid #d7e9f9}
+    .summary-label{margin:0 0 6px;font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:#334155;font-weight:700}
+    .summary-value{margin:0;font-size:20px;line-height:1.2;color:#0f172a;font-weight:900}
+    .amount{color:#b91c1c;font-size:30px;letter-spacing:-.03em}
+    .banner{margin:0 0 16px;padding:12px 14px;border-radius:12px;background:var(--warning-bg);border:1px solid var(--warning-border);color:var(--warning-ink);font-size:13px;line-height:1.6;font-weight:700}
+    .button{display:inline-block;padding:14px 24px;border-radius:12px;background:var(--primary);color:#ffffff;text-decoration:none;font-weight:700;font-size:15px;box-shadow:none}
+    .divider{margin:20px 0 16px;border:0;border-top:1px dashed #cfdceb}
+    .label{margin:0 0 8px;font-size:12px;color:#334155;text-transform:uppercase;letter-spacing:.06em;font-weight:700}
+    .link-box{margin:0;padding:10px 12px;background:#ffffff;border:1px solid #bfd3e9;border-radius:10px;color:#0b4f86;font-size:12px;line-height:1.6;word-break:break-all}
+    .footer{border-top:1px solid var(--line);padding:16px 26px 24px;color:#334155;font-size:12px;line-height:1.7;background:#f9fbff}
+    @media only screen and (max-width:600px){.container{padding:20px 10px}.hero{padding:24px 18px 20px}.content,.footer{padding-left:18px;padding-right:18px}.title{font-size:25px}.summary-grid{grid-template-columns:1fr}.amount{font-size:26px}}
+  </style>
+</head>
+<body>
+  <div class='container'>
+    <div class='brand'>COM-Serve</div>
+    <div class='card'>
+      <div class='hero'>
+        <div class='eyebrow'>Wallet statement</div>
+        <h1 class='title'>Wallet balance update</h1>
+        <p class='intro'>Hello Glen, here is the latest wallet summary for the primary wallet.</p>
+      </div>
+      <div class='content'>
+        <div class='summary'>
+          <p class='banner'>Amount owing is shown below. Please review the wallet summary and settle the balance by the due date.</p>
+          <div class='summary-grid'>
+            <div class='summary-item'><p class='summary-label'>Amount owing</p><p class='summary-value amount'>R30</p></div>
+            <div class='summary-item'><p class='summary-label'>Due date</p><p class='summary-value'>12 April 2026</p></div>
+            <div class='summary-item'><p class='summary-label'>Wallet ID</p><p class='summary-value'>WLT-204981</p></div>
+            <div class='summary-item'><p class='summary-label'>Wallet</p><p class='summary-value'>Primary Wallet</p></div>
+          </div>
+        </div>
+        <a href='#' class='button'>View wallet</a>
+        <hr class='divider'>
+        <p class='label'>Payment link</p>
+        <p class='link-box'>https://example.com/wallet/pay?token=abc123xyz</p>
+      </div>
+      <div class='footer'>If you believe this balance is incorrect, please contact support before making payment.</div>
+    </div>
+  </div>
+</body>
+</html>"></iframe>
+      </section>
+    </div>
+  </div>
+</body>
+</html>
