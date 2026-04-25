@@ -9,10 +9,7 @@ window.APP_CONFIG.API_BASE_URL =
 	(isLocalHost ? 'http://localhost:3000' : window.location.origin);
 
 // Firebase live DB mode for browser-side auth flow.
-window.APP_CONFIG.ENABLE_FIREBASE_LIVE_PROVIDER =
-	window.APP_CONFIG.ENABLE_FIREBASE_LIVE_PROVIDER !== undefined
-		? window.APP_CONFIG.ENABLE_FIREBASE_LIVE_PROVIDER
-		: true;
+window.APP_CONFIG.ENABLE_FIREBASE_LIVE_PROVIDER = true;
 
 // Keep false in production to avoid exposing OTP in UI messages.
 window.APP_CONFIG.SHOW_DEV_OTP =
