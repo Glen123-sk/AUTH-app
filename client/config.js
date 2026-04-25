@@ -12,7 +12,7 @@ window.APP_CONFIG.API_BASE_URL =
 window.APP_CONFIG.ENABLE_FIREBASE_LIVE_PROVIDER =
 	window.APP_CONFIG.ENABLE_FIREBASE_LIVE_PROVIDER !== undefined
 		? window.APP_CONFIG.ENABLE_FIREBASE_LIVE_PROVIDER
-		: false;
+		: true;
 
 // Keep false in production to avoid exposing OTP in UI messages.
 window.APP_CONFIG.SHOW_DEV_OTP =

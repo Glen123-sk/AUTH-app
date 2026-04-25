@@ -16,16 +16,20 @@ async function main() {
   });
 
   const db = admin.firestore();
-  // Add a sample banned user document
-  const bannedRef = db.collection('users_banned').doc();
-  await bannedRef.set({
-    username: 'banneduser',
-    email: 'banned@example.com',
+  // Add 10 fake banned user documents
+  const fakeUsers = Array.from({ length: 10 }, (_, i) => ({
+    username: `banneduser${i + 1}`,
+    email: `banned${i + 1}@example.com`,
     reason: 'Violation of terms',
-    bannedAt: new Date().toISOString(),
-    admin: 'admin@example.com'
-  });
-  console.log('Created users_banned collection with a sample document:', bannedRef.id);
+    bannedAt: new Date(Date.now() - i * 86400000).toISOString(),
+    admin: `admin${(i % 3) + 1}@example.com`
+  }));
+
+  for (const user of fakeUsers) {
+    const bannedRef = db.collection('users_banned').doc();
+    await bannedRef.set(user);
+    console.log('Created users_banned document:', bannedRef.id, user);
+  }
   process.exit(0);
 }
 

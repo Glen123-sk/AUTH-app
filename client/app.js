@@ -197,7 +197,12 @@ function setupSignup() {
     }
 
     try {
-      const data = await apiPost('/register', { username, email, password, confirmPassword });
+      let data;
+      if (window.LiveAuthProvider?.enabled && typeof window.LiveAuthProvider.post === 'function') {
+        data = await window.LiveAuthProvider.post('/register', { username, email, password, confirmPassword });
+      } else {
+        data = await apiPost('/register', { username, email, password, confirmPassword });
+      }
       setMessage('signup-message', data.message || 'Verification email sent.', 'success');
       go(`/otp.html?email=${encodeURIComponent(email)}&purpose=verifyEmail`);
     } catch (error) {
