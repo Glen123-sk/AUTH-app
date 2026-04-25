@@ -8,3 +8,4 @@ target/
 server/node_modules/
 server/.env
 server/data/*.json
+server/com-app-81bf4-firebase-adminsdk-fbsvc-91cb11e053.json
