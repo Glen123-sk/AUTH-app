@@ -1,0 +1,31 @@
+name: Deploy to Firebase Hosting on push
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build_and_deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # Uncomment and edit the following if you have tests
+      # - name: Run tests
+      #   run: |
+      #     npm ci
+      #     npm test
+
+
+      - name: Run CI test
+        run: node server/test-ci.js
+
+      - name: Install Firebase CLI
+        run: npm install -g firebase-tools
+
+      - name: Deploy to Firebase Hosting
+        run: firebase deploy --only hosting --project com-app-81bf4 --token "$FIREBASE_TOKEN"
+        env:
+          FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
