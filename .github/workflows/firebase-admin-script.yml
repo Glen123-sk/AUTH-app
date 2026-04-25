@@ -1,0 +1,32 @@
+# Sample GitHub Actions workflow for Firebase Admin SDK scripts
+# Assumes you have added your service account JSON as the secret FIREBASE_SERVICE_ACCOUNT
+
+name: Run Firebase Admin Script
+
+on:
+  workflow_dispatch:
+
+jobs:
+  run-firebase-script:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Write service account key to file
+        run: |
+          echo "$FIREBASE_SERVICE_ACCOUNT" > serviceAccountKey.json
+        env:
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+
+      - name: Install dependencies
+        run: npm install
+        working-directory: ./server
+
+      - name: Run your script (example: list-collections)
+        run: node server/list-collections.js ../serviceAccountKey.json

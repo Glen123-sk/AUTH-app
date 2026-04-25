@@ -4,17 +4,23 @@ const admin = require('firebase-admin');
 const fs = require('fs');
 
 async function main() {
-	const keyPath = process.argv[2];
-	if (!keyPath || !fs.existsSync(keyPath)) {
-		console.error('Usage: node server/list-collections.js serviceAccountKey.json');
-		process.exit(1);
-	}
+		let serviceAccount;
+		if (process.env.FIREBASE_SERVICE_ACCOUNT) {
+			// Running in CI/CD: parse from env
+			serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
+		} else {
+			const keyPath = process.argv[2];
+			if (!keyPath || !fs.existsSync(keyPath)) {
+				console.error('Usage: node server/list-collections.js serviceAccountKey.json');
+				process.exit(1);
+			}
+			const resolvedKeyPath = require('path').resolve(keyPath);
+			serviceAccount = require(resolvedKeyPath);
+		}
 
-
-	const resolvedKeyPath = require('path').resolve(keyPath);
-	admin.initializeApp({
-		credential: admin.credential.cert(require(resolvedKeyPath)),
-	});
+		admin.initializeApp({
+			credential: admin.credential.cert(serviceAccount),
+		});
 
 	const db = admin.firestore();
 	const collections = await db.listCollections();
