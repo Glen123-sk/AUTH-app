@@ -16,14 +16,22 @@ async function main() {
   });
 
   const db = admin.firestore();
-  // Add a sample user document
-  const userRef = db.collection('users').doc();
-  await userRef.set({
-    username: 'sampleuser',
-    email: 'sample@example.com',
-    createdAt: new Date().toISOString()
-  });
-  console.log('Created users collection with a sample document:', userRef.id);
+  // Delete all documents in the users collection
+  const usersSnapshot = await db.collection('users').get();
+  if (usersSnapshot.empty) {
+    console.log('No users to delete.');
+    return;
+  }
+  const batchSize = 500;
+  let deleted = 0;
+  const docs = usersSnapshot.docs;
+  for (let i = 0; i < docs.length; i += batchSize) {
+    const batch = db.batch();
+    docs.slice(i, i + batchSize).forEach(doc => batch.delete(doc.ref));
+    await batch.commit();
+    deleted += Math.min(batchSize, docs.length - i);
+  }
+  console.log(`Deleted ${deleted} user documents from the users collection.`);
   process.exit(0);
 }
 

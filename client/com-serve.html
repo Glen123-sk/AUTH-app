@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>COM-serve | Access Portal</title>
+    
+    <!-- Google Fonts Import -->
+    <link href="https://fonts.googleapis.com/css2?family=Abril+Fatface&family=Space+Mono:wght@400;700&family=Cormorant+Garamond:ital,wght@0,300;0,600;1,300;1,600&display=swap" rel="stylesheet">
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html, body {
+            width: 100%;
+            height: 100%;
+            background-color: #f5f0e8;
+            font-family: 'Space Mono', monospace;
+            color: #1a1a1a;
+            overflow-x: hidden;
+        }
+
+        body {
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 40px 20px;
+        }
+
+        /* Kanji Watermark */
+        .watermark {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) rotate(-4deg) scale(1.3);
+            font-family: Georgia, serif;
+            font-size: 210px;
+            font-weight: 900;
+            color: rgba(26, 26, 26, 0.045);
+            z-index: 1;
+            pointer-events: none;
+            line-height: 1;
+            animation: watermarkScale 1.1s cubic-bezier(0.17, 0.67, 0.3, 1.3) forwards;
+        }
+
+        @keyframes watermarkScale {
+            from {
+                transform: translate(-50%, -50%) rotate(-4deg) scale(1.3);
+            }
+            to {
+                transform: translate(-50%, -50%) rotate(-4deg) scale(1);
+            }
+        }
+
+        /* Ink Blob Decorations */
+        .ink-blob {
+            position: absolute;
+            border-radius: 50%;
+            background: radial-gradient(circle at center, rgba(26, 26, 26, 0.09) 0%, transparent 68%);
+            pointer-events: none;
+            animation: blobPulse 4s ease-in-out infinite;
+        }
+
+        @keyframes blobPulse {
+            0%, 100% {
+                opacity: 0.06;
+            }
+            50% {
+                opacity: 0.13;
+            }
+        }
+
+        .ink-blob:nth-child(1) { animation-delay: 0s; }
+        .ink-blob:nth-child(2) { animation-delay: 0.3s; }
+        .ink-blob:nth-child(3) { animation-delay: 0.6s; }
+        .ink-blob:nth-child(4) { animation-delay: 0.9s; }
+        .ink-blob:nth-child(5) { animation-delay: 1.2s; }
+        .ink-blob:nth-child(6) { animation-delay: 1.5s; }
+        .ink-blob:nth-child(7) { animation-delay: 1.8s; }
+        .ink-blob:nth-child(8) { animation-delay: 2.1s; }
+        .ink-blob:nth-child(9) { animation-delay: 2.4s; }
+        .ink-blob:nth-child(10) { animation-delay: 2.7s; }
+
+        /* Main Container */
+        .container {
+            position: relative;
+            z-index: 10;
+            max-width: 800px;
+            text-align: center;
+        }
+
+        /* Supporting Label */
+        .label {
+            font-family: 'Space Mono', monospace;
+            font-size: 10px;
+            letter-spacing: 10px;
+            text-transform: uppercase;
+            color: rgba(26, 26, 26, 0.38);
+            margin-bottom: 16px;
+            opacity: 0;
+            animation: fadeUp 0.8s ease-out 0s forwards;
+        }
+
+        /* Vertical Rule - Top */
+        .rule-top {
+            width: 1px;
+            height: 52px;
+            background-color: #1a1a1a;
+            margin: 0 auto 24px;
+            opacity: 0;
+            animation: fadeUp 0.8s ease-out 0.1s forwards;
+        }
+
+        /* Logo / Headline */
+        .logo {
+            font-family: 'Abril Fatface', serif;
+            font-size: clamp(60px, 12vw, 148px);
+            color: #1a1a1a;
+            letter-spacing: -3px;
+            line-height: 0.88;
+            margin: 0;
+            transform-origin: top center;
+            animation: inkDropLogo 1.1s cubic-bezier(0.17, 0.67, 0.3, 1.3) 0.2s forwards;
+            opacity: 0;
+        }
+
+        @keyframes inkDropLogo {
+            from {
+                opacity: 0;
+                transform: scaleY(0);
+            }
+            to {
+                opacity: 1;
+                transform: scaleY(1);
+            }
+        }
+
+        /* Tagline */
+        .tagline {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 16px;
+            font-style: italic;
+            font-weight: 300;
+            color: rgba(26, 26, 26, 0.42);
+            letter-spacing: 6px;
+            margin: 20px 0 24px;
+            opacity: 0;
+            transform: translateY(20px);
+            animation: fadeUp 0.8s ease-out 0.4s forwards;
+        }
+
+        /* Vertical Rule - Bottom */
+        .rule-bottom {
+            width: 1px;
+            height: 52px;
+            background-color: #1a1a1a;
+            margin: 24px auto 48px;
+            opacity: 0;
+            animation: fadeUp 0.8s ease-out 0.5s forwards;
+        }
+
+        /* Stats Row */
+        .stats {
+            display: flex;
+            justify-content: center;
+            gap: 60px;
+            margin: 60px 0;
+            flex-wrap: wrap;
+        }
+
+        .stat {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            opacity: 0;
+            animation: fadeUp 0.8s ease-out forwards;
+        }
+
+        .stat:nth-child(1) { animation-delay: 0.6s; }
+        .stat:nth-child(2) { animation-delay: 0.7s; }
+        .stat:nth-child(3) { animation-delay: 0.8s; }
+
+        .stat-value {
+            font-family: 'Abril Fatface', serif;
+            font-size: 22px;
+            color: #1a1a1a;
+            margin-bottom: 8px;
+        }
+
+        .stat-label {
+            font-family: 'Space Mono', monospace;
+            font-size: 8px;
+            letter-spacing: 4px;
+            color: rgba(26, 26, 26, 0.32);
+            text-transform: uppercase;
+        }
+
+        /* Buttons Container */
+        .buttons-container {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            margin: 60px 0;
+            flex-wrap: wrap;
+            opacity: 0;
+            animation: fadeUp 0.8s ease-out 0.9s forwards;
+        }
+
+        /* Primary Button */
+        .btn-primary {
+            background-color: #1a1a1a;
+            color: #f5f0e8;
+            font-family: 'Space Mono', monospace;
+            font-size: 10px;
+            letter-spacing: 6px;
+            padding: 14px 44px;
+            text-transform: uppercase;
+            border: 2px solid #1a1a1a;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 400;
+        }
+
+        .btn-primary:hover {
+            background-color: #f5f0e8;
+            color: #1a1a1a;
+        }
+
+        /* Secondary Button */
+        .btn-secondary {
+            background-color: transparent;
+            color: rgba(26, 26, 26, 0.45);
+            font-family: 'Space Mono', monospace;
+            font-size: 10px;
+            letter-spacing: 6px;
+            padding: 14px 44px;
+            text-transform: uppercase;
+            border: 1px solid rgba(26, 26, 26, 0.22);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 400;
+        }
+
+        .btn-secondary:hover {
+            border-color: #1a1a1a;
+            color: #1a1a1a;
+        }
+
+        /* Footer Label */
+        .footer {
+            position: fixed;
+            bottom: 40px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-family: 'Space Mono', monospace;
+            font-size: 9px;
+            letter-spacing: 5px;
+            color: rgba(26, 26, 26, 0.18);
+            opacity: 0;
+            animation: fadeUp 0.8s ease-out 1s forwards;
+            z-index: 10;
+        }
+
+        @keyframes fadeUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Responsive */
+        @media (max-width: 640px) {
+            .stats {
+                gap: 40px;
+                margin: 40px 0;
+            }
+
+            .buttons-container {
+                flex-direction: column;
+                gap: 12px;
+            }
+
+            .btn-primary, .btn-secondary {
+                width: 100%;
+            }
+
+            .footer {
+                bottom: 20px;
+                font-size: 8px;
+                letter-spacing: 3px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Ink Blob Decorations -->
+    <div class="ink-blob"></div>
+    <div class="ink-blob"></div>
+    <div class="ink-blob"></div>
+    <div class="ink-blob"></div>
+    <div class="ink-blob"></div>
+    <div class="ink-blob"></div>
+    <div class="ink-blob"></div>
+    <div class="ink-blob"></div>
+    <div class="ink-blob"></div>
+    <div class="ink-blob"></div>
+
+    <!-- Kanji Watermark -->
+    <div class="watermark">守</div>
+
+    <!-- Main Container -->
+    <div class="container">
+        <div class="label">Access Portal</div>
+        
+        <div class="rule-top"></div>
+        
+        <h1 class="logo">COM-serve</h1>
+        
+        <p class="tagline">Precision · Craft · Excellence</p>
+        
+        <div class="rule-bottom"></div>
+
+        <!-- Stats Row -->
+        <div class="stats">
+            <div class="stat">
+                <div class="stat-value">99.9%</div>
+                <div class="stat-label">Uptime</div>
+            </div>
+            <div class="stat">
+                <div class="stat-value">256-bit</div>
+                <div class="stat-label">Encryption</div>
+            </div>
+            <div class="stat">
+                <div class="stat-value">Zero</div>
+                <div class="stat-label">Compromise</div>
+            </div>
+        </div>
+
+        <!-- Buttons -->
+        <div class="buttons-container">
+            <button class="btn-primary">Enter Portal</button>
+            <button class="btn-secondary">Learn More</button>
+        </div>
+    </div>
+
+    <!-- Footer Label -->
+    <div class="footer">v4.2.1 · Established in Excellence</div>
+
+    <script>
+        // Generate random ink blob positions and sizes
+        function initializeBlobs() {
+            const blobs = document.querySelectorAll('.ink-blob');
+            
+            blobs.forEach((blob, index) => {
+                // Random size between 130px and 470px
+                const size = Math.random() * (470 - 130) + 130;
+                
+                // Random position (accounting for blob size to keep them mostly in view)
+                const maxX = window.innerWidth - size;
+                const maxY = window.innerHeight - size;
+                const x = Math.random() * maxX;
+                const y = Math.random() * maxY;
+                
+                blob.style.width = size + 'px';
+                blob.style.height = size + 'px';
+                blob.style.left = x + 'px';
+                blob.style.top = y + 'px';
+            });
+        }
+
+        // Initialize on page load
+        window.addEventListener('DOMContentLoaded', initializeBlobs);
+        window.addEventListener('resize', initializeBlobs);
+
+        // Add click handlers to buttons
+        document.querySelector('.btn-primary').addEventListener('click', function() {
+            console.log('Enter Portal clicked');
+        });
+
+        document.querySelector('.btn-secondary').addEventListener('click', function() {
+            console.log('Learn More clicked');
+        });
+    </script>
+</body>
+</html>

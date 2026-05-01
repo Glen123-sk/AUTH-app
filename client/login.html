@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Auth App | Login</title>
+  <style>:root { --scale-formInput: 0.5; }</style>
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body data-page="login" class="poster-page">
@@ -23,7 +24,13 @@
         </div>
         <button class="btn solid" type="submit">Login</button>
       </form>
-
+      <div id="login-fire-loader" style="display:none">
+        <div class="fire-outer">
+          <div class="fire-track">
+            <div class="fire-fill"></div>
+          </div>
+        </div>
+      </div>
       <div id="login-message" class="message"></div>
       <div class="link-row">
         <a href="forgot-password.html">Forgot password?</a>
@@ -35,7 +42,7 @@
   <script src="config.js"></script>
   <script src="colors.js"></script>
   <script src="scale.js"></script>
-  <script type="module" src="reg.js"></script>
   <script src="app.js"></script>
+  <script src="reg.js"></script>
 </body>
 </html>
