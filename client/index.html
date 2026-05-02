@@ -23,47 +23,9 @@
 
       <p class="slogan">Building Financial Support Through Technology</p>
 
-        <a class="cta" href="#" id="getStartedBtn">GET STARTED</a>
+        <a class="cta" href="get-started.html">GET STARTED</a>
       </div>
-
-      <!-- Get Started Modal -->
-      <div class="get-started-modal" id="getStartedModal" aria-hidden="true">
-        <div class="modal-backdrop" data-close></div>
-        <div class="modal-panel" role="dialog" aria-modal="true" aria-labelledby="gs-title">
-          <h2 id="gs-title">Get Started</h2>
-          <p class="modal-sub">Choose an option to continue</p>
-          <div class="modal-actions">
-            <a class="modal-btn modal-login" href="login.html">Login</a>
-            <a class="modal-btn modal-signup" href="signup.html">Sign Up</a>
-          </div>
-          <button class="modal-close" aria-label="Close" data-close>×</button>
-        </div>
-      </div>
-    </div>
-    <script>
-      (function(){
-        const openBtn = document.getElementById('getStartedBtn');
-        const modal = document.getElementById('getStartedModal');
-        const closeElems = modal ? modal.querySelectorAll('[data-close]') : [];
-
-        function openModal(e){
-          e && e.preventDefault();
-          if(!modal) return;
-          modal.setAttribute('aria-hidden','false');
-          modal.classList.add('open');
-        }
-        function closeModal(){
-          if(!modal) return;
-          modal.setAttribute('aria-hidden','true');
-          modal.classList.remove('open');
-        }
-        openBtn && openBtn.addEventListener('click', openModal);
-        closeElems.forEach(el => el.addEventListener('click', closeModal));
-        document.addEventListener('keydown', (ev)=>{
-          if(ev.key === 'Escape') closeModal();
-        });
-      })();
-    </script>
+    </main>
   </main>
   <script src="config.js"></script>
   <script src="colors.js"></script>
