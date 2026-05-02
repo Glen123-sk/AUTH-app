@@ -5,33 +5,26 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Auth App | Secure Landing</title>
   <link rel="stylesheet" href="styles.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Libre+Baskerville:ital,wght@0,400;1,400&display=swap" rel="stylesheet">
 </head>
-<body data-page="landing">
-  <main class="poster-shell">
-    <section class="sheet">
-      <div class="left">
-        <div class="actions">
-          <button id="go-login" class="btn solid">Login</button>
-          <button id="go-signup" class="btn line">Sign Up</button>
-        </div>
-        <span class="stamp">Secured</span>
-      </div>
-      <div class="right">
-        <div class="rule"></div>
-        <p>Firebase Auth with email verification and secure password reset links.</p>
-        <a href="forgot-password.html" id="go-forgot" class="lab-link">Forgot password?</a>
-        <div class="rule"></div>
-      </div>
-    </section>
-    <section class="contact-block contact-standalone" aria-label="Contact details">
-      <h2>Contact</h2>
-      <p><strong>Com serve.</strong></p>
-      <p><strong>Email:</strong> com205260@gmail.ccom</p>
-      <p><strong>Phone number:</strong> 082 276 0871</p>
-      <p><strong>Street:</strong> 2219 Bo Meul St</p>
-      <p><strong>City:</strong> Cape Town</p>
-      <p><strong>State/province/area:</strong> Western Cape</p>
-    </section>
+<body data-page="landing" class="com-serve-landing">
+  <main class="landing-root" role="main">
+    <div class="corner corner-tl" aria-hidden="true"></div>
+    <div class="corner corner-br" aria-hidden="true"></div>
+
+    <div class="landing-inner">
+      <div class="ceremonial-line" aria-hidden="true"></div>
+
+      <h1 class="brand">
+        COM<span class="hyphen">-</span>SERVE
+      </h1>
+
+      <div class="divider" aria-hidden="true"></div>
+
+      <p class="slogan">Building Financial Support Through Technology</p>
+
+      <a class="cta" href="signup.html">GET STARTED</a>
+    </div>
   </main>
   <script src="config.js"></script>
   <script src="colors.js"></script>
