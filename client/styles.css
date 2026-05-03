@@ -401,9 +401,35 @@ body[data-page="landing"] .btn:active {
 
 /* ------------------ COM-SERVE Landing Styles ------------------ */
 .com-serve-landing {
-  background-color: #0d0d0d;
+  position: relative;
+  isolation: isolate;
+  background-color: #0a0a0a;
   color: #ffffff;
   min-height: 100vh;
+  overflow: hidden;
+}
+
+.landing-backdrop {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.landing-grid {
+  background-image:
+    linear-gradient(rgba(26, 26, 62, 0.12) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(26, 26, 62, 0.12) 1px, transparent 1px);
+  background-size: 60px 60px;
+  background-position: 0 0;
+  animation: landing-grid-drift 32s linear infinite;
+}
+
+.landing-glow {
+  z-index: 1;
+  background: radial-gradient(circle at 50% 22%, rgba(26, 26, 62, 0.62) 0%, rgba(26, 26, 62, 0.34) 24%, rgba(26, 26, 62, 0.12) 42%, rgba(26, 26, 62, 0) 68%);
+  opacity: 0.7;
+  animation: landing-glow-breathe 6s ease-in-out infinite;
 }
 
 .landing-root {
@@ -412,11 +438,27 @@ body[data-page="landing"] .btn:active {
   display: grid;
   place-items: center;
   padding: 32px 20px;
-  /* subtle grid pattern: very faint white lines (3% opacity) */
-  background-image:
-    repeating-linear-gradient(90deg, rgba(255,255,255,0.03) 0 1px, transparent 1px 28px),
-    repeating-linear-gradient(0deg, rgba(255,255,255,0.03) 0 1px, transparent 1px 28px);
-  background-size: auto;
+  z-index: 2;
+}
+
+@keyframes landing-grid-drift {
+  0% {
+    background-position: 0 0;
+  }
+  100% {
+    background-position: 60px 60px;
+  }
+}
+
+@keyframes landing-glow-breathe {
+  0%, 100% {
+    opacity: 0.42;
+    transform: scale(0.985);
+  }
+  50% {
+    opacity: 0.82;
+    transform: scale(1.02);
+  }
 }
 
 .landing-inner {
